@@ -1,10 +1,10 @@
 export const siteConfig = {
-  name: "NOVA",
+  name: "roquace",
   tagline: "Everyday Fashion, Reimagined.",
   description: "Contemporary fashion brand from Indonesia.",
   whatsapp: "628123456789",
-  instagram: "@nova",
-  tiktok: "@nova",
+  instagram: "@roquace",
+  tiktok: "@roquace",
   currency: "IDR",
   shipping: {
     freeShippingMinimum: 500000,
