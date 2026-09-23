@@ -1,0 +1,50 @@
+---
+import { siteConfig } from '../config/site';
+---
+
+<section class="relative min-h-screen flex items-center overflow-hidden">
+  <!-- Background Image -->
+  <div class="absolute inset-0">
+    <img
+      src="/images/hero.jpg"
+      alt="NOVA Fashion Collection"
+      class="w-full h-full object-cover scale-105 animate-scale-in"
+      loading="eager"
+    />
+    <div class="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="relative z-10 container-custom py-32 md:py-40 lg:py-48">
+    <div class="max-w-5xl">
+      <p class="tracking-[0.4em] uppercase text-foreground/50 mb-8 md:mb-10 animate-fade-in font-body text-sm md:text-base lg:text-lg" style="animation-delay: 0.2s">
+        New Collection
+      </p>
+      <h1 class="mb-8 md:mb-10 animate-slide-up font-heading font-light tracking-tight leading-[0.9]" style="animation-delay: 0.4s; font-size: clamp(4rem, 14vw, 12rem);">
+        Wear Your<br />
+        <span class="text-foreground/50">Identity.</span>
+      </h1>
+      <p class="text-foreground/50 max-w-2xl mb-12 md:mb-14 animate-slide-up font-body leading-relaxed text-lg md:text-xl lg:text-2xl" style="animation-delay: 0.6s">
+        Contemporary fashion designed for everyday expression.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-5 md:gap-6 animate-slide-up" style="animation-delay: 0.8s">
+        <a href="/shop" class="btn-primary py-5 px-12 text-base md:text-lg">
+          Shop Collection
+        </a>
+        <a href="/about" class="btn-secondary py-5 px-12 text-base md:text-lg">
+          Explore Lookbook
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-float">
+    <div class="flex flex-col items-center gap-3">
+      <span class="text-sm tracking-[0.3em] uppercase text-foreground/40 font-body">Scroll</span>
+      <svg class="w-6 h-6 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    </div>
+  </div>
+</section>

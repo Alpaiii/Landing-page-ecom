@@ -1,0 +1,48 @@
+---
+const faqs = [
+  {
+    question: "What sizes are available?",
+    answer: "We offer sizes XS through XL. Please check our size guide on each product page for detailed measurements."
+  },
+  {
+    question: "How can I order?",
+    answer: "Simply click 'Order via WhatsApp' on any product page. Our team will assist you with the ordering process."
+  },
+  {
+    question: "Do you offer COD?",
+    answer: "Yes, we offer COD for Jabodetabek area. For other cities, payment via bank transfer or e-wallet is available."
+  },
+  {
+    question: "How long does shipping take?",
+    answer: "Regular shipping takes 2-3 business days. Express shipping 1-2 business days. Free shipping for orders above Rp500,000."
+  },
+  {
+    question: "What is your return policy?",
+    answer: "Returns are accepted within 7 days of receipt in unworn condition with tags still attached."
+  },
+];
+---
+
+<section id="faq" class="section-padding bg-background">
+  <div class="container-custom max-w-3xl">
+    <div class="text-center mb-16 md:mb-20">
+      <p class="text-body tracking-[0.3em] uppercase text-muted mb-6 font-body">FAQ</p>
+      <h2 class="heading-lg">Frequently Asked Questions</h2>
+    </div>
+    <div class="space-y-0">
+      {faqs.map((faq, index) => (
+        <details class="group border-b border-border/50">
+          <summary class="flex items-center justify-between py-6 cursor-pointer font-body font-medium list-none text-body-lg hover:text-accent transition-colors duration-300">
+            {faq.question}
+            <svg class="w-6 h-6 transition-transform duration-300 group-open:rotate-180 flex-shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div class="pb-6 text-body text-foreground/50 font-body leading-relaxed">
+            {faq.answer}
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

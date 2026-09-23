@@ -1,0 +1,11 @@
+---
+import { siteConfig } from '../config/site';
+---
+
+{siteConfig.announcement.enabled && (
+  <div class="bg-foreground text-background py-3 text-center">
+    <p class="text-base tracking-[0.2em] uppercase font-body">
+      {siteConfig.announcement.text}
+    </p>
+  </div>
+)}

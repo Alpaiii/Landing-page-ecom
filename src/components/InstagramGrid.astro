@@ -1,0 +1,44 @@
+---
+import { siteConfig } from '../config/site';
+
+const posts = [
+  { image: '/images/instagram/ig-1.jpg', alt: 'Instagram post 1' },
+  { image: '/images/instagram/ig-2.jpg', alt: 'Instagram post 2' },
+  { image: '/images/instagram/ig-3.jpg', alt: 'Instagram post 3' },
+  { image: '/images/instagram/ig-4.jpg', alt: 'Instagram post 4' },
+  { image: '/images/instagram/ig-5.jpg', alt: 'Instagram post 5' },
+  { image: '/images/instagram/ig-6.jpg', alt: 'Instagram post 6' },
+];
+---
+
+<section class="section-padding">
+  <div class="container-custom">
+    <div class="text-center mb-16 md:mb-20">
+      <p class="text-lg tracking-[0.3em] uppercase text-muted mb-6 font-body">Follow Us</p>
+      <h2 class="heading-xl mb-5">@{siteConfig.instagram.replace('@', '')}</h2>
+      <p class="text-lg text-foreground/50 font-body">Stay connected for the latest drops and style inspiration.</p>
+    </div>
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+      {posts.map((post) => (
+        <a href={`https://instagram.com/${siteConfig.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" class="aspect-square overflow-hidden group">
+          <img
+            src={post.image}
+            alt={post.alt}
+            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+        </a>
+      ))}
+    </div>
+    <div class="text-center mt-12">
+      <a
+        href={`https://instagram.com/${siteConfig.instagram.replace('@', '')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-secondary"
+      >
+        Follow on Instagram
+      </a>
+    </div>
+  </div>
+</section>

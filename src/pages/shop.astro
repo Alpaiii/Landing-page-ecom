@@ -1,0 +1,41 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import ProductGrid from '../components/ProductGrid.astro';
+import Footer from '../components/Footer.astro';
+import { products } from '../data/products';
+
+const title = 'Shop';
+---
+
+<Layout title={title}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom">
+        <div class="text-center mb-12">
+          <h1 class="heading-xl mb-4">Shop</h1>
+          <p class="text-foreground/60 font-body max-w-xl mx-auto">
+            Discover our curated collection of contemporary fashion pieces.
+          </p>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap justify-center gap-4 mb-12">
+          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body bg-foreground text-background">All</button>
+          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">New Arrivals</button>
+          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">Best Sellers</button>
+          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">T-Shirt</button>
+          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">Hoodie</button>
+        </div>
+
+        <ProductGrid products={products} />
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

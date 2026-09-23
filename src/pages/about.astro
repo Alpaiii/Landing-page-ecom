@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import CTA from '../components/CTA.astro';
+import Footer from '../components/Footer.astro';
+import { siteConfig } from '../config/site';
+---
+
+<Layout title="About">
+  <AnnouncementBar />
+  <Navbar />
+
+  <main class="pt-32 md:pt-36">
+    <!-- Hero -->
+    <section class="section-padding">
+      <div class="container-custom">
+        <div class="max-w-3xl mx-auto text-center">
+          <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4">About Us</p>
+          <h1 class="heading-xl mb-6">The Story of {siteConfig.name}</h1>
+          <p class="text-lg text-foreground/70 font-body">
+            Born from a passion for contemporary fashion, {siteConfig.name} represents the modern individual 
+            who values both style and substance.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Story -->
+    <section class="section-padding bg-background">
+      <div class="container-custom">
+        <div class="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+          <div class="aspect-[4/5] overflow-hidden">
+            <img
+              src="/images/about/story.jpg"
+              alt="Our Story"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h2 class="heading-lg mb-6">Our Mission</h2>
+            <div class="space-y-4 text-foreground/70 font-body">
+              <p>
+                We believe fashion should be accessible, sustainable, and authentic. Our collections 
+                are curated to empower you to express your unique identity.
+              </p>
+              <p>
+                Every piece is thoughtfully designed to seamlessly blend into your everyday life, 
+                offering comfort without compromising on style.
+              </p>
+              <p>
+                From casual streetwear to elegant pieces, we create clothing that speaks volumes 
+                without saying a word.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values -->
+    <section class="section-padding">
+      <div class="container-custom">
+        <div class="grid md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 class="font-body font-medium mb-2">Quality Material</h3>
+            <p class="text-sm text-foreground/60 font-body">Premium fabrics sourced for comfort and durability.</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <h3 class="font-body font-medium mb-2">Local Crafted</h3>
+            <p class="text-sm text-foreground/60 font-body">Made with care by local artisans.</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+            </div>
+            <h3 class="font-body font-medium mb-2">Timeless Design</h3>
+            <p class="text-sm text-foreground/60 font-body">Styles that transcend trends.</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 class="font-body font-medium mb-2">Made for Everyday</h3>
+            <p class="text-sm text-foreground/60 font-body">Comfortable pieces for daily wear.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <CTA />
+  </main>
+
+  <Footer />
+</Layout>

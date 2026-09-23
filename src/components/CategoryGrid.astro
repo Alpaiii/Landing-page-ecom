@@ -1,0 +1,33 @@
+---
+const categories = [
+  { name: 'Women', image: '/images/categories/women.webp', slug: 'women' },
+  { name: 'Men', image: '/images/categories/men.webp', slug: 'men' },
+  { name: 'Accessories', image: '/images/categories/accessories.webp', slug: 'accessories' },
+  { name: 'New Arrivals', image: '/images/categories/new-arrival.webp', slug: 'new-arrival' },
+];
+---
+
+<section class="section-padding">
+  <div class="container-custom">
+    <div class="text-center mb-16 md:mb-20">
+      <p class="text-lg tracking-[0.3em] uppercase text-muted mb-6 font-body">Shop by Category</p>
+      <h2 class="heading-xl">Find Your Style</h2>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+      {categories.map((cat) => (
+        <a href={`/shop?category=${cat.slug}`} class="group relative aspect-[3/4] overflow-hidden">
+          <img
+            src={cat.image}
+            alt={cat.name}
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500"></div>
+          <div class="absolute inset-0 flex items-end p-6 md:p-8">
+            <span class="text-white font-heading text-3xl md:text-4xl tracking-wider">{cat.name}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

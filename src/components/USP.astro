@@ -1,0 +1,26 @@
+---
+const usps = [
+  { number: "01", title: "Quality Material", description: "Premium fabrics sourced for comfort and durability." },
+  { number: "02", title: "Local Crafted", description: "Made with care by local artisans." },
+  { number: "03", title: "Timeless Design", description: "Styles that transcend trends." },
+  { number: "04", title: "Made for Everyday", description: "Comfortable pieces for daily wear." },
+];
+---
+
+<section class="section-padding">
+  <div class="container-custom">
+    <div class="text-center mb-16 md:mb-20">
+      <p class="text-body tracking-[0.3em] uppercase text-muted mb-6 font-body">Why NOVA</p>
+      <h2 class="heading-lg">Built Different</h2>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
+      {usps.map((usp) => (
+        <div class="text-center md:text-left group">
+          <span class="text-6xl md:text-7xl font-heading font-light text-foreground/10 block mb-5 group-hover:text-accent/30 transition-colors duration-500">{usp.number}</span>
+          <h3 class="font-body font-semibold text-body-lg mb-3">{usp.title}</h3>
+          <p class="text-body text-foreground/50 font-body">{usp.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
