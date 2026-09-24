@@ -2,17 +2,19 @@
 import { testimonials } from '../data/testimonials';
 ---
 
-<section class="section-padding bg-background">
-  <div class="container-custom max-w-6xl">
-    <div class="text-center mb-16 md:mb-20">
+<section class="section-padding bg-background overflow-x-hidden">
+  <div class="container-custom">
+    <div class="text-center mb-14 md:mb-20">
       <p class="text-body tracking-[0.3em] uppercase text-muted mb-6 font-body">What They're Wearing</p>
-      <h2 class="heading-lg mb-5">Customer Stories</h2>
+      <h2 class="heading-lg mb-6">Customer Stories</h2>
       <div class="editorial-divider mx-auto"></div>
     </div>
+  </div>
+  <div class="px-6 sm:px-8 lg:px-12">
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
       {testimonials.map((testimonial) => (
-        <figure class="flex flex-col bg-white border border-border p-8 md:p-10 transition-all duration-500 ease-out hover:border-accent/40 hover:shadow-xl hover:shadow-foreground/5">
-          <svg class="w-10 h-10 text-accent/30 mb-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <figure class="relative flex flex-col bg-white border border-border p-8 md:p-10 transition-all duration-500 ease-out hover:border-accent/40 hover:shadow-xl hover:shadow-foreground/10 group">
+          <svg class="w-12 h-12 text-accent/20 mb-6 group-hover:text-accent/40 transition-colors duration-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
           </svg>
           <div class="flex gap-1.5 mb-6">
@@ -31,7 +33,7 @@ import { testimonials } from '../data/testimonials';
               <p class="text-body text-muted font-body font-light">{testimonial.product}</p>
             )}
             <p class="text-sm text-accent font-body font-medium mt-2 inline-flex items-center gap-1.5">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Verified Purchase
