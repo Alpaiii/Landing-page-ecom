@@ -72,13 +72,15 @@ const featuredProducts = products.filter(p => p.badge === 'New' || p.badge === '
         </div>
       </div>
       <div class="px-6 sm:px-8 lg:px-12">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-x-10">
+        <div class="flex gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-8 lg:scroll-px-12 pb-4 scrollbar-hide">
           {featuredProducts.map((product) => (
-            <ProductCard product={product} />
+            <div class="w-[80vw] sm:w-[46vw] md:w-[38vw] lg:w-[30vw] xl:w-[400px] shrink-0 snap-start">
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       </div>
-      <div class="text-center mt-14 md:mt-20">
+      <div class="text-center mt-10 md:mt-14">
         <a href="/shop" class="btn-secondary">
           View All Products
         </a>
