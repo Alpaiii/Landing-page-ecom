@@ -4,12 +4,41 @@ import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Navbar from '../components/Navbar.astro';
 import ProductGrid from '../components/ProductGrid.astro';
 import Footer from '../components/Footer.astro';
-import { products } from '../data/products';
+import { products, getNewArrivals, getBestSellers, type ProductCategory } from '../data/products';
+import { categories } from '../data/categories';
 
 const title = 'Shop';
+const description = 'Discover our curated collection of contemporary fashion pieces. Shop the latest trends in women, men, and accessories.';
+
+// Get filter from URL
+const url = Astro.url;
+const categoryFilter = url.searchParams.get('category') as ProductCategory | null;
+const filterType = url.searchParams.get('filter');
+
+// Filter products
+let filteredProducts = [...products];
+
+if (categoryFilter) {
+  filteredProducts = filteredProducts.filter(p => p.category === categoryFilter);
+}
+
+if (filterType === 'new') {
+  filteredProducts = getNewArrivals();
+} else if (filterType === 'bestseller') {
+  filteredProducts = getBestSellers();
+}
+
+// Sort options
+const sortOptions = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'bestselling', label: 'Best Selling' },
+];
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <AnnouncementBar />
   <Navbar />
 
@@ -17,25 +46,101 @@ const title = 'Shop';
     <section class="section-padding">
       <div class="container-custom">
         <div class="text-center mb-12">
-          <h1 class="heading-xl mb-4">Shop</h1>
+          <h1 class="heading-xl mb-4">
+            {categoryFilter ? categories.find(c => c.id === categoryFilter)?.name || 'Shop' : 'Shop'}
+          </h1>
           <p class="text-foreground/60 font-body max-w-xl mx-auto">
-            Discover our curated collection of contemporary fashion pieces.
+            {filterType === 'new' 
+              ? 'Fresh styles just dropped. Be the first to shop our latest pieces.' 
+              : filterType === 'bestseller'
+              ? 'Customer favorites you\'ll love. The pieces our community loves most.'
+              : 'Discover our curated collection of contemporary fashion pieces.'}
           </p>
         </div>
 
-        <!-- Filters -->
-        <div class="flex flex-wrap justify-center gap-4 mb-12">
-          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body bg-foreground text-background">All</button>
-          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">New Arrivals</button>
-          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">Best Sellers</button>
-          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">T-Shirt</button>
-          <button class="px-6 py-2 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">Hoodie</button>
+        <!-- Filters & Sort Bar -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <!-- Category Filters -->
+          <div class="flex flex-wrap gap-3">
+            <a 
+              href="/shop"
+              class={`px-5 py-2.5 text-sm tracking-wider uppercase font-body transition-colors ${
+                !categoryFilter && !filterType 
+                  ? 'bg-foreground text-background' 
+                  : 'border border-border hover:bg-foreground hover:text-background'
+              }`}
+            >
+              All
+            </a>
+            {categories.filter(c => c.id !== 'new-arrivals').map((category) => (
+              <a
+                href={`/shop?category=${category.slug}`}
+                class={`px-5 py-2.5 text-sm tracking-wider uppercase font-body transition-colors ${
+                  categoryFilter === category.id 
+                    ? 'bg-foreground text-background' 
+                    : 'border border-border hover:bg-foreground hover:text-background'
+                }`}
+              >
+                {category.name}
+              </a>
+            ))}
+          </div>
+
+          <!-- Sort Dropdown -->
+          <div class="relative">
+            <select 
+              id="sort-select"
+              class="appearance-none px-5 py-2.5 pr-10 text-sm tracking-wider uppercase font-body border border-border bg-background cursor-pointer focus:outline-none focus:border-foreground"
+            >
+              {sortOptions.map((option) => (
+                <option value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <svg class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
 
-        <ProductGrid products={products} />
+        <!-- Product Count -->
+        <p class="text-sm text-muted font-body mb-8">
+          Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+        </p>
+
+        <!-- Products Grid -->
+        {filteredProducts.length > 0 ? (
+          <ProductGrid products={filteredProducts} />
+        ) : (
+          <div class="text-center py-16">
+            <p class="text-muted font-body mb-6">No products found.</p>
+            <a href="/shop" class="btn-secondary">View All Products</a>
+          </div>
+        )}
       </div>
     </section>
   </main>
 
   <Footer />
 </Layout>
+
+<script>
+  // Sort functionality
+  const sortSelect = document.getElementById('sort-select') as HTMLSelectElement;
+  
+  sortSelect?.addEventListener('change', (e) => {
+    const value = (e.target as HTMLSelectElement).value;
+    const url = new URL(window.location.href);
+    
+    // In a real app, this would re-fetch products or sort client-side
+    // For now, we just update the URL
+    if (value !== 'featured') {
+      url.searchParams.set('sort', value);
+    } else {
+      url.searchParams.delete('sort');
+    }
+    
+    // For static site, we just reload the page
+    // In a dynamic site, you'd re-sort the products
+    console.log('Sort by:', value);
+  });
+</script>

@@ -3,9 +3,20 @@ import { siteConfig } from '../config/site';
 ---
 
 {siteConfig.announcement.enabled && (
-  <div class="bg-foreground text-background py-3 text-center">
-    <p class="text-base tracking-[0.2em] uppercase font-body">
+  <div class="bg-foreground text-background py-3 text-center relative z-[55]">
+    <p class="text-sm tracking-[0.15em] uppercase font-body">
       {siteConfig.announcement.text}
+      {siteConfig.announcement.ctaText && siteConfig.announcement.ctaLink && (
+        <>
+          {' — '}
+          <a 
+            href={siteConfig.announcement.ctaLink} 
+            class="underline underline-offset-4 hover:text-accent transition-colors"
+          >
+            {siteConfig.announcement.ctaText}
+          </a>
+        </>
+      )}
     </p>
   </div>
 )}

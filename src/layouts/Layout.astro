@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from '../config/site';
+import Cart from '../components/Cart.astro';
 
 interface Props {
   title?: string;
@@ -54,5 +55,8 @@ const pageTitle = title === siteConfig.name ? `${siteConfig.name} — ${siteConf
 </head>
 <body class="min-h-screen">
   <slot />
+  
+  <!-- Global Cart Component -->
+  <Cart />
 </body>
 </html>

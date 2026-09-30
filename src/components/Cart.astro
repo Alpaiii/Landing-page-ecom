@@ -1,0 +1,215 @@
+---
+import { siteConfig } from '../config/site';
+import { formatPrice } from '../utils/currency';
+---
+
+<!-- Cart Overlay -->
+<div id="cart-overlay" class="fixed inset-0 z-[60] hidden">
+  <!-- Backdrop -->
+  <div id="cart-backdrop" class="absolute inset-0 bg-foreground/50 backdrop-blur-sm"></div>
+  
+  <!-- Cart Panel -->
+  <aside id="cart-panel" class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-background shadow-xl flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b border-border">
+      <h2 class="heading-sm">Your Cart</h2>
+      <button id="cart-close" class="p-2 hover:bg-secondary/30 transition-colors" aria-label="Close cart">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Cart Items -->
+    <div id="cart-items" class="flex-1 overflow-y-auto p-6">
+      <!-- Items will be populated by JavaScript -->
+      <div id="cart-empty" class="text-center py-16">
+        <svg class="w-16 h-16 mx-auto mb-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <p class="text-muted font-body mb-2">Your cart is empty</p>
+        <p class="text-sm text-muted font-body mb-6">Discover something you love.</p>
+        <a href="/shop" class="btn-secondary">Shop Collection</a>
+      </div>
+      
+      <div id="cart-list" class="space-y-6 hidden">
+        <!-- Cart items will be rendered here -->
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div id="cart-footer" class="border-t border-border p-6 hidden">
+      <!-- Subtotal -->
+      <div class="space-y-3 mb-6">
+        <div class="flex justify-between font-body">
+          <span class="text-muted">Subtotal</span>
+          <span id="cart-subtotal" class="font-medium">Rp 0</span>
+        </div>
+        <p class="text-sm text-muted font-body">Shipping calculated at checkout</p>
+      </div>
+      
+      <!-- WhatsApp Checkout -->
+      <a
+        id="cart-checkout-btn"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-accent w-full flex items-center justify-center gap-2 mb-3"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Checkout via WhatsApp
+      </a>
+      
+      <!-- Continue Shopping -->
+      <a href="/shop" class="block text-center text-sm font-body text-muted hover:text-foreground transition-colors">
+        Continue Shopping
+      </a>
+    </div>
+  </aside>
+</div>
+
+<script define:vars={{ siteConfig }}>
+  const cartOverlay = document.getElementById('cart-overlay');
+  const cartPanel = document.getElementById('cart-panel');
+  const cartBackdrop = document.getElementById('cart-backdrop');
+  const cartClose = document.getElementById('cart-close');
+  const cartItems = document.getElementById('cart-items');
+  const cartEmpty = document.getElementById('cart-empty');
+  const cartList = document.getElementById('cart-list');
+  const cartFooter = document.getElementById('cart-footer');
+  const cartSubtotal = document.getElementById('cart-subtotal');
+  const cartCheckoutBtn = document.getElementById('cart-checkout-btn');
+
+  // Open cart
+  function openCart() {
+    cartOverlay?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    renderCart();
+  }
+
+  // Close cart
+  function closeCart() {
+    cartOverlay?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  // Render cart items
+  function renderCart() {
+    const cart = JSON.parse(localStorage.getItem('roquace_cart') || '[]');
+    
+    if (cart.length === 0) {
+      cartEmpty?.classList.remove('hidden');
+      cartList?.classList.add('hidden');
+      cartFooter?.classList.add('hidden');
+      return;
+    }
+    
+    cartEmpty?.classList.add('hidden');
+    cartList?.classList.remove('hidden');
+    cartFooter?.classList.remove('hidden');
+    
+    // Calculate total
+    let total = 0;
+    
+    // Render items
+    cartList.innerHTML = cart.map((item, index) => {
+      total += item.price * item.quantity;
+      return `
+        <div class="flex gap-4 cart-item" data-index="${index}">
+          <img src="${item.product.thumbnail}" alt="${item.product.name}" class="w-24 h-32 object-cover" />
+          <div class="flex-1">
+            <h3 class="font-heading text-lg mb-1">${item.product.name}</h3>
+            <p class="text-sm text-muted font-body mb-2">${item.color} / ${item.size}</p>
+            <p class="font-body font-medium mb-3">${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}</p>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center border border-border">
+                <button class="qty-decrease px-3 py-1.5 hover:bg-secondary/30 transition-colors" aria-label="Decrease quantity">−</button>
+                <span class="px-3 py-1.5 font-body">${item.quantity}</span>
+                <button class="qty-increase px-3 py-1.5 hover:bg-secondary/30 transition-colors" aria-label="Increase quantity">+</button>
+              </div>
+              <button class="remove-btn text-sm text-muted hover:text-error transition-colors font-body">Remove</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Update subtotal
+    if (cartSubtotal) {
+      cartSubtotal.textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
+    }
+    
+    // Update WhatsApp link
+    if (cartCheckoutBtn) {
+      let message = 'Hi, I would like to order:\n\n';
+      cart.forEach((item, index) => {
+        message += `${index + 1}. ${item.product.name}\n`;
+        message += `   ${item.color} / ${item.size}\n`;
+        message += `   Qty: ${item.quantity}\n\n`;
+      });
+      message += `Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total)}\n\n`;
+      message += 'Please confirm my order. Thank you!';
+      
+      cartCheckoutBtn.href = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
+    }
+    
+    // Add event listeners
+    cartList?.querySelectorAll('.qty-decrease').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(e.target.closest('.cart-item').dataset.index);
+        updateQuantity(index, -1);
+      });
+    });
+    
+    cartList?.querySelectorAll('.qty-increase').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(e.target.closest('.cart-item').dataset.index);
+        updateQuantity(index, 1);
+      });
+    });
+    
+    cartList?.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(e.target.closest('.cart-item').dataset.index);
+        removeItem(index);
+      });
+    });
+  }
+
+  // Update quantity
+  function updateQuantity(index, delta) {
+    const cart = JSON.parse(localStorage.getItem('roquace_cart') || '[]');
+    if (cart[index]) {
+      cart[index].quantity = Math.max(1, cart[index].quantity + delta);
+      localStorage.setItem('roquace_cart', JSON.stringify(cart));
+      renderCart();
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+    }
+  }
+
+  // Remove item
+  function removeItem(index) {
+    const cart = JSON.parse(localStorage.getItem('roquace_cart') || '[]');
+    cart.splice(index, 1);
+    localStorage.setItem('roquace_cart', JSON.stringify(cart));
+    renderCart();
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+  }
+
+  // Event listeners
+  document.getElementById('cart-btn')?.addEventListener('click', openCart);
+  document.getElementById('cart-btn-mobile')?.addEventListener('click', openCart);
+  cartClose?.addEventListener('click', closeCart);
+  cartBackdrop?.addEventListener('click', closeCart);
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !cartOverlay?.classList.contains('hidden')) {
+      closeCart();
+    }
+  });
+  
+  // Listen for cart updates
+  window.addEventListener('cart-updated', renderCart);
+</script>
