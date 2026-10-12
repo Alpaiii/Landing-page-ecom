@@ -1,6 +1,4 @@
 ---
-export const prerender = false;
-
 import Layout from '../../layouts/Layout.astro';
 import AnnouncementBar from '../../components/AnnouncementBar.astro';
 import Navbar from '../../components/Navbar.astro';
@@ -14,6 +12,14 @@ import ProductCardV2 from '../../components/ProductCardV2.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import ProductError from '../../components/ProductError.astro';
 import { fetchProductBySlug, fetchProducts } from '../../utils/productApi';
+
+// Get all products for static generation
+export async function getStaticPaths() {
+  const products = await fetchProducts();
+  return products.map((product) => ({
+    params: { slug: product.slug }
+  }));
+}
 
 const { slug } = Astro.params;
 const product = await fetchProductBySlug(slug!);

@@ -1,6 +1,5 @@
 import type { Product } from '../data/products';
-
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:4000';
+import { supabase } from '../lib/supabase';
 
 // Map database product to frontend Product type
 export function mapApiProduct(apiProduct: any): Product {
@@ -16,7 +15,7 @@ export function mapApiProduct(apiProduct: any): Product {
     badge = 'Sale';
   }
 
-  // Map images
+  // Map images (already in correct format from database)
   const images = (apiProduct.images || []).map((img: string, index: number) => ({
     src: img,
     alt: `${apiProduct.name} - Image ${index + 1}`
@@ -78,7 +77,7 @@ function mapCategory(category: string): Product['category'] {
     'Bags': 'accessories'
   };
   
-  return categoryMap[category] || 'unisex';
+  return categoryMap[category] || 'accessories';
 }
 
 // Simple color name to hex mapping
@@ -98,24 +97,33 @@ function getColorHex(colorName: string): string {
     'Gray': '#808080',
     'Grey': '#808080',
     'Beige': '#F5F5DC',
-    'Cream': '#FFFDD0'
+    'Cream': '#FFFDD0',
+    'Natural': '#F5F5DC',
+    'Tan': '#D2B48C',
+    'Khaki': '#C3B091',
+    'Olive': '#808000',
+    'Sage': '#9DC183',
+    'Charcoal': '#36454F',
+    'Burgundy': '#800020'
   };
   
   return colorMap[colorName] || '#CCCCCC';
 }
 
-// Fetch products from API
+// Fetch products from Supabase
 export async function fetchProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(`${API_URL}/api/products`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch products');
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching products:', error);
+      return [];
     }
     
-    const result = await response.json();
-    const apiProducts = result.data || [];
-    
-    return apiProducts.map(mapApiProduct);
+    return (data || []).map(mapApiProduct);
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -125,18 +133,62 @@ export async function fetchProducts(): Promise<Product[]> {
 // Fetch single product by slug
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const response = await fetch(`${API_URL}/api/products`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch products');
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching product:', error);
+      return null;
     }
     
-    const result = await response.json();
-    const apiProducts = result.data || [];
-    const product = apiProducts.find((p: any) => p.slug === slug);
-    
-    return product ? mapApiProduct(product) : null;
+    return data ? mapApiProduct(data) : null;
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
+  }
+}
+
+// Fetch products by category
+export async function fetchProductsByCategory(category: string): Promise<Product[]> {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('category', category)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching products by category:', error);
+      return [];
+    }
+    
+    return (data || []).map(mapApiProduct);
+  } catch (error) {
+    console.error('Error fetching products by category:', error);
+    return [];
+  }
+}
+
+// Search products
+export async function searchProducts(query: string): Promise<Product[]> {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .or(`name.ilike.%${query}%,description.ilike.%${query}%,tags.cs.{${query}}`)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error searching products:', error);
+      return [];
+    }
+    
+    return (data || []).map(mapApiProduct);
+  } catch (error) {
+    console.error('Error searching products:', error);
+    return [];
   }
 }

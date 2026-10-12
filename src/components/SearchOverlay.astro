@@ -42,20 +42,20 @@
           <div>
             <h3 class="text-sm tracking-wider uppercase font-body text-foreground/60 mb-4">Trending Searches</h3>
             <div class="flex flex-wrap gap-2">
-              <a href="/shop?search=oversized+tee" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
-                Oversized Tee
+              <a href="/shop?search=tote" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Tote Bags
               </a>
-              <a href="/shop?search=cargo+pants" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
-                Cargo Pants
+              <a href="/shop?search=crossbody" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Crossbody
               </a>
-              <a href="/shop?search=hoodie" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
-                Hoodie
+              <a href="/shop?search=messenger" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Messenger
               </a>
-              <a href="/shop?search=linen+shirt" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
-                Linen Shirt
+              <a href="/shop?search=canvas" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Canvas
               </a>
-              <a href="/shop?search=wide+leg" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
-                Wide Leg
+              <a href="/shop?search=laptop" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Laptop Bag
               </a>
             </div>
           </div>
@@ -127,6 +127,7 @@
 
 <script>
   import { trapFocus } from '../utils/focusTrap';
+  import { supabase } from '../lib/supabase';
 
   const searchOverlay = document.getElementById('search-overlay');
   const searchBackdrop = document.getElementById('search-backdrop');
@@ -143,7 +144,6 @@
 
   let searchTimeout: number;
   let releaseFocusTrap: (() => void) | null = null;
-  const API_URL = 'http://localhost:4000';
 
   function formatIDR(value: number): string {
     return `Rp${value.toLocaleString('id-ID')}`;
@@ -196,18 +196,23 @@
     noResults?.classList.add('hidden');
   }
 
-  // Load popular products from API
+  // Load popular products from Supabase
   async function loadPopularProducts() {
     if (!popularProducts) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/products?is_featured=true&limit=4`);
-      if (!response.ok) return;
+      const { data: products, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_featured', true)
+        .limit(4);
 
-      const result = await response.json();
-      const products = result.data || [];
+      if (error) {
+        console.error('Error loading popular products:', error);
+        return;
+      }
 
-      popularProducts.innerHTML = products
+      popularProducts.innerHTML = (products || [])
         .map(
           (product: any) => `
           <a href="/products/${escapeHTML(product.slug)}" class="search-result-card">
@@ -222,7 +227,7 @@
     }
   }
 
-  // Search products via API
+  // Search products via Supabase
   async function searchProducts(query: string) {
     if (!query.trim()) {
       showDefault();
@@ -230,22 +235,24 @@
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/search/products?q=${encodeURIComponent(query)}&limit=8`);
+      const { data: products, error } = await supabase
+        .from('products')
+        .select('*')
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+        .limit(8);
       
-      if (!response.ok) {
+      if (error) {
+        console.error('Search error:', error);
         showNoResults(query);
         return;
       }
 
-      const result = await response.json();
-      const products = result.data || [];
-
-      if (products.length === 0) {
+      if (!products || products.length === 0) {
         showNoResults(query);
         return;
       }
 
-      showResults(products, query, result.pagination?.total || 0);
+      showResults(products, query, products.length);
     } catch (e) {
       console.error('Search error:', e);
       showNoResults(query);
@@ -259,7 +266,7 @@
     searchResults?.classList.remove('hidden');
 
     if (resultsCount) {
-      resultsCount.textContent = `Found ${total} product${total !== 1 ? 's' : ''} (showing ${products.length})`;
+      resultsCount.textContent = `Found ${total} product${total !== 1 ? 's' : ''}`;
     }
 
     if (viewAllLink) {
