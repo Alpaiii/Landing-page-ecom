@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const title = '500 - Server Error';
+const description = 'Something went wrong on our end';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding min-h-[60vh] flex items-center justify-center">
+      <div class="container-custom max-w-2xl text-center">
+        <div class="mb-8">
+          <svg class="w-24 h-24 mx-auto text-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        
+        <h1 class="text-6xl md:text-8xl font-heading mb-6">500</h1>
+        <h2 class="text-2xl md:text-3xl font-heading mb-6">Server Error</h2>
+        <p class="text-foreground/70 font-body mb-12 max-w-md mx-auto">
+          Something went wrong on our end. We're working to fix it. Please try again in a moment.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/"
+            class="inline-block px-8 py-4 bg-foreground text-background text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors"
+          >
+            Go Home
+          </a>
+          <button
+            onclick="window.location.reload()"
+            class="inline-block px-8 py-4 border border-border text-sm tracking-wider uppercase font-body hover:bg-foreground hover:text-background transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+
+        <div class="mt-12 pt-12 border-t border-border">
+          <p class="text-sm text-foreground/60 font-body mb-4">Need help?</p>
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+            <a href="/contact" class="text-foreground underline hover:no-underline font-body">
+              Contact Support
+            </a>
+            <span class="hidden sm:inline text-foreground/40">·</span>
+            <a href="/faq" class="text-foreground underline hover:no-underline font-body">
+              Visit FAQ
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

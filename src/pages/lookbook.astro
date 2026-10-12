@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Lookbook from '../components/Lookbook.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Lookbook';
+const description = 'See how our canvas bags fit into everyday life. Discover roquace bags styled for work, travel, and adventure.';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <h1 class="sr-only">Lookbook</h1>
+    <Lookbook />
+  </main>
+
+  <Footer />
+</Layout>

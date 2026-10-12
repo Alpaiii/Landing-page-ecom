@@ -1,21 +1,21 @@
 ---
 const categories = [
-  { name: 'Women', image: '/images/categories/women.webp', slug: 'women' },
-  { name: 'Men', image: '/images/categories/men.webp', slug: 'men' },
-  { name: 'Accessories', image: '/images/categories/accessories.webp', slug: 'accessories' },
-  { name: 'New Arrivals', image: '/images/categories/new-arrival.webp', slug: 'new-arrival' },
+  { name: 'Tote Bags', image: '/images/categories/tote.webp', slug: 'tote' },
+  { name: 'Crossbody', image: '/images/categories/crossbody.webp', slug: 'crossbody' },
+  { name: 'Messenger', image: '/images/categories/messenger.webp', slug: 'messenger' },
+  { name: 'New Arrivals', image: '/images/categories/new-arrival.webp', slug: 'new-arrivals' },
 ];
 ---
 
 <section class="section-padding">
   <div class="container-custom">
     <div class="text-center mb-16 md:mb-20">
-      <p class="text-lg tracking-[0.3em] uppercase text-muted mb-6 font-body">Shop by Category</p>
-      <h2 class="heading-xl">Find Your Style</h2>
+      <p class="text-lg tracking-[0.3em] uppercase text-muted mb-6 font-body">Shop by Style</p>
+      <h2 class="heading-xl">Find Your Bag</h2>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
       {categories.map((cat) => (
-        <a href={`/shop?category=${cat.slug}`} class="group relative aspect-[3/4] overflow-hidden">
+        <a href={`/shop/${cat.slug}`} class="group relative aspect-[3/4] overflow-hidden">
           <img
             src={cat.image}
             alt={cat.name}

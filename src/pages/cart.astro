@@ -1,0 +1,472 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import PageSkeleton from '../components/PageSkeleton.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Shopping Cart';
+const description = 'Review your cart items';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom">
+        <!-- Header -->
+        <div class="mb-12">
+          <h1 class="text-3xl md:text-4xl font-heading mb-2">Your Cart</h1>
+          <p id="cart-count-text" class="text-foreground/60 font-body" role="status" aria-live="polite">0 items</p>
+        </div>
+
+        <!-- Cart contents come from localStorage, so there is always a real
+             hydration gap between first paint and the rendered rows. -->
+        <div id="cart-skeleton" role="status" aria-live="polite" aria-label="Loading cart">
+          <PageSkeleton variant="cart" />
+        </div>
+
+        <div id="cart-content" class="hidden">
+        <div class="grid lg:grid-cols-3 gap-8 lg:gap-12">
+          <!-- Cart Items -->
+          <div class="lg:col-span-2">
+            <div id="cart-items-list" class="space-y-6">
+              <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="cart-empty" class="hidden text-center py-16">
+              <svg class="w-20 h-20 mx-auto mb-6 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              <h2 class="text-2xl font-heading mb-2">Your cart is empty</h2>
+              <p class="text-foreground/60 font-body mb-8">Discover pieces made for everyday life</p>
+              <a href="/shop" class="btn-secondary inline-block">
+                Continue Shopping
+              </a>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div id="cart-summary" class="lg:col-span-1">
+            <div class="border border-border p-6 sticky top-36">
+              <h2 class="text-xl tracking-wider uppercase font-body mb-6">Order Summary</h2>
+
+              <!-- Coupon Input -->
+              <div class="mb-6">
+                <label class="text-sm tracking-wider uppercase font-body block mb-3">Promo Code</label>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    id="coupon-input"
+                    placeholder="Enter code"
+                    class="flex-1 px-4 py-2.5 text-sm font-body border border-border focus:outline-none focus:border-foreground"
+                  />
+                  <button
+                    id="apply-coupon"
+                    class="px-6 py-2.5 text-sm tracking-wider uppercase font-body bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+                <p id="coupon-message" class="text-sm font-body mt-2 hidden"></p>
+              </div>
+
+              <!-- Free Shipping Progress -->
+              <div id="shipping-progress-box" class="mb-6 p-4 bg-foreground/5">
+                <p id="shipping-message-full" class="text-sm font-body text-foreground/70 mb-2"></p>
+                <div class="w-full h-2 bg-foreground/10 rounded-full overflow-hidden">
+                  <div id="shipping-bar-full" class="h-full bg-accent transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Price Breakdown -->
+              <div class="space-y-3 mb-6">
+                <div class="flex items-center justify-between text-sm font-body">
+                  <span class="text-foreground/70">Subtotal</span>
+                  <span id="summary-subtotal" class="font-medium">Rp0</span>
+                </div>
+                <div class="flex items-center justify-between text-sm font-body">
+                  <span class="text-foreground/70">Shipping</span>
+                  <span id="summary-shipping" class="font-medium">Calculated at checkout</span>
+                </div>
+                <div id="discount-row" class="hidden flex items-center justify-between text-sm font-body text-accent">
+                  <span>Discount</span>
+                  <span id="summary-discount">-Rp0</span>
+                </div>
+                <div class="flex items-center justify-between text-lg font-body pt-3 border-t border-border">
+                  <span class="font-medium">Total</span>
+                  <span id="summary-total" class="font-medium">Rp0</span>
+                </div>
+              </div>
+
+              <!-- Checkout Button -->
+              <a
+                href="/checkout"
+                id="checkout-link"
+                class="block w-full py-4 bg-foreground text-background text-center text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors mb-3"
+              >
+                Proceed to Checkout
+              </a>
+
+              <a
+                href="/shop"
+                class="block w-full py-4 border border-border text-center text-sm tracking-wider uppercase font-body hover:bg-foreground hover:text-background transition-colors"
+              >
+                Continue Shopping
+              </a>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  interface CartItem {
+    productId: string;
+    product: {
+      id: string;
+      name: string;
+      slug: string;
+      price: number;
+      thumbnail: string;
+      inStock: boolean;
+      stockCount?: number;
+    };
+    color?: string;
+    size?: string;
+    quantity: number;
+    price: number;
+  }
+
+  interface Coupon {
+    code: string;
+    discount_amount: number;
+    description?: string;
+  }
+
+  const FREE_SHIPPING_THRESHOLD = 500000;
+  const API_URL = 'http://localhost:4000';
+
+  let appliedCoupon: Coupon | null = null;
+
+  function formatPrice(price: number): string {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  }
+
+  function getCart(): CartItem[] {
+    try {
+      return JSON.parse(localStorage.getItem('roquace_cart') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function saveCart(cart: CartItem[]) {
+    localStorage.setItem('roquace_cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+  }
+
+  function updateQuantity(index: number, delta: number) {
+    const cart = getCart();
+    if (cart[index]) {
+      const newQty = cart[index].quantity + delta;
+      const maxQty = cart[index].product.stockCount || 99;
+      
+      if (newQty <= 0) {
+        removeItem(index);
+      } else if (newQty <= maxQty) {
+        cart[index].quantity = newQty;
+        saveCart(cart);
+        renderCart();
+      }
+    }
+  }
+
+  function removeItem(index: number) {
+    if (confirm('Remove this item from your cart?')) {
+      const cart = getCart();
+      cart.splice(index, 1);
+      saveCart(cart);
+      renderCart();
+    }
+  }
+
+  function calculateSubtotal(cart: CartItem[]): number {
+    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }
+
+  function calculateDiscount(subtotal: number, coupon: Coupon | null): number {
+    if (!coupon) return 0;
+    return coupon.discount_amount;
+  }
+
+  function updateShippingProgress(subtotal: number) {
+    const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+    const progress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+
+    const shippingBar = document.getElementById('shipping-bar-full');
+    const shippingMessage = document.getElementById('shipping-message-full');
+
+    if (shippingBar) {
+      shippingBar.style.width = `${progress}%`;
+    }
+
+    if (shippingMessage) {
+      if (remaining > 0) {
+        shippingMessage.textContent = `Add ${formatPrice(remaining)} more to get FREE SHIPPING`;
+        shippingMessage.classList.remove('text-accent');
+      } else {
+        shippingMessage.textContent = '🎉 You qualify for FREE SHIPPING!';
+        shippingMessage.classList.add('text-accent');
+      }
+    }
+  }
+
+  async function applyCoupon() {
+    const input = document.getElementById('coupon-input') as HTMLInputElement;
+    const message = document.getElementById('coupon-message');
+    const applyBtn = document.getElementById('apply-coupon') as HTMLButtonElement;
+    const code = input.value.trim().toUpperCase();
+
+    if (!code) {
+      if (message) {
+        message.textContent = 'Please enter a coupon code';
+        message.classList.remove('hidden', 'text-accent');
+        message.classList.add('text-red-500');
+      }
+      return;
+    }
+
+    // Get current cart subtotal
+    const cart = getCart();
+    const subtotal = calculateSubtotal(cart);
+
+    // Show loading
+    const originalText = applyBtn.textContent;
+    applyBtn.textContent = 'Validating...';
+    applyBtn.disabled = true;
+
+    try {
+      const response = await fetch(`${API_URL}/api/coupons/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code,
+          subtotal,
+          customer_id: null // TODO: Add customer_id if logged in
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        appliedCoupon = {
+          code: result.data.code,
+          discount_amount: result.data.discount_amount,
+          description: result.data.description
+        };
+        
+        // Save to localStorage for checkout
+        localStorage.setItem('roquace_applied_coupon', JSON.stringify(appliedCoupon));
+        
+        if (message) {
+          message.textContent = `✓ ${result.data.description || `Coupon "${code}" applied!`}`;
+          message.classList.remove('hidden', 'text-red-500');
+          message.classList.add('text-accent');
+        }
+        input.value = '';
+        renderCart();
+      } else {
+        if (message) {
+          message.textContent = `✗ ${result.error || 'Invalid coupon code'}`;
+          message.classList.remove('hidden', 'text-accent');
+          message.classList.add('text-red-500');
+        }
+      }
+    } catch (error) {
+      console.error('Coupon validation error:', error);
+      if (message) {
+        message.textContent = '✗ Failed to validate coupon';
+        message.classList.remove('hidden', 'text-accent');
+        message.classList.add('text-red-500');
+      }
+    } finally {
+      applyBtn.textContent = originalText;
+      applyBtn.disabled = false;
+    }
+  }
+
+  function renderCart() {
+    const cart = getCart();
+    const cartItemsList = document.getElementById('cart-items-list');
+    const cartEmpty = document.getElementById('cart-empty');
+    const cartSummary = document.getElementById('cart-summary');
+    const cartCountText = document.getElementById('cart-count-text');
+
+    // The real content is ready, so the hydration skeleton has served its purpose.
+    document.getElementById('cart-skeleton')?.classList.add('hidden');
+    document.getElementById('cart-content')?.classList.remove('hidden');
+
+    const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    if (cartCountText) {
+      cartCountText.textContent = `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
+    }
+
+    if (cart.length === 0) {
+      cartItemsList?.classList.add('hidden');
+      cartSummary?.classList.add('hidden');
+      cartEmpty?.classList.remove('hidden');
+      return;
+    }
+
+    cartItemsList?.classList.remove('hidden');
+    cartSummary?.classList.remove('hidden');
+    cartEmpty?.classList.add('hidden');
+
+    // Render items
+    if (cartItemsList) {
+      cartItemsList.innerHTML = cart.map((item, index) => `
+        <div class="flex gap-6 pb-6 border-b border-border">
+          <a href="/products/${item.product.slug}" class="w-32 flex-shrink-0">
+            <img
+              src="${item.product.thumbnail}"
+              alt="${item.product.name}"
+              class="w-full aspect-[4/5] object-cover"
+            />
+          </a>
+          
+          <div class="flex-1 flex flex-col">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <a href="/products/${item.product.slug}" class="font-body text-lg hover:text-accent transition-colors">
+                  ${item.product.name}
+                </a>
+                ${item.color ? `<p class="text-sm text-foreground/60 font-body mt-1">Color: ${item.color}</p>` : ''}
+                ${item.size ? `<p class="text-sm text-foreground/60 font-body">Size: ${item.size}</p>` : ''}
+              </div>
+              <button
+                class="remove-item-btn p-2 text-foreground/60 hover:text-red-500 transition-colors"
+                data-index="${index}"
+                aria-label="Remove item"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="mt-auto flex items-center justify-between">
+              <div class="flex items-center border border-border">
+                <button
+                  class="qty-decrease-btn px-4 py-2 hover:bg-foreground/5 transition-colors"
+                  data-index="${index}"
+                  aria-label="Decrease quantity"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                  </svg>
+                </button>
+                <span class="px-6 py-2 text-sm font-body">${item.quantity}</span>
+                <button
+                  class="qty-increase-btn px-4 py-2 hover:bg-foreground/5 transition-colors"
+                  data-index="${index}"
+                  aria-label="Increase quantity"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
+              
+              <p class="text-lg font-body font-medium">${formatPrice(item.price * item.quantity)}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Attach event listeners
+      document.querySelectorAll('.qty-decrease-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const index = parseInt((btn as HTMLElement).dataset.index || '0');
+          updateQuantity(index, -1);
+        });
+      });
+
+      document.querySelectorAll('.qty-increase-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const index = parseInt((btn as HTMLElement).dataset.index || '0');
+          updateQuantity(index, 1);
+        });
+      });
+
+      document.querySelectorAll('.remove-item-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const index = parseInt((btn as HTMLElement).dataset.index || '0');
+          removeItem(index);
+        });
+      });
+    }
+
+    // Update summary
+    const subtotal = calculateSubtotal(cart);
+    const discount = calculateDiscount(subtotal, appliedCoupon);
+    const total = subtotal - discount;
+
+    const summarySubtotal = document.getElementById('summary-subtotal');
+    const summaryDiscount = document.getElementById('summary-discount');
+    const summaryTotal = document.getElementById('summary-total');
+    const discountRow = document.getElementById('discount-row');
+
+    if (summarySubtotal) summarySubtotal.textContent = formatPrice(subtotal);
+    if (summaryTotal) summaryTotal.textContent = formatPrice(total);
+
+    if (discount > 0 && discountRow && summaryDiscount) {
+      discountRow.classList.remove('hidden');
+      summaryDiscount.textContent = `-${formatPrice(discount)}`;
+    } else if (discountRow) {
+      discountRow.classList.add('hidden');
+    }
+
+    // Update shipping progress
+    updateShippingProgress(subtotal);
+  }
+
+  // Event listeners
+  document.getElementById('apply-coupon')?.addEventListener('click', applyCoupon);
+  
+  document.getElementById('coupon-input')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      applyCoupon();
+    }
+  });
+
+  // Listen for cart updates
+  window.addEventListener('cart-updated', renderCart);
+
+  // Load saved coupon from localStorage
+  try {
+    const savedCoupon = localStorage.getItem('roquace_applied_coupon');
+    if (savedCoupon) {
+      appliedCoupon = JSON.parse(savedCoupon);
+    }
+  } catch (e) {
+    console.error('Failed to load saved coupon:', e);
+  }
+
+  // Initial render
+  renderCart();
+</script>

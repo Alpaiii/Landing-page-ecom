@@ -1,0 +1,143 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import { siteConfig } from '../config/site';
+
+const title = 'Shipping & Returns';
+const description = 'Shipping rates, delivery estimates, and return policy';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom max-w-4xl">
+        <div class="mb-16 text-center">
+          <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4 font-body">Policies</p>
+          <h1 class="heading-lg mb-4">Shipping & Returns</h1>
+          <p class="text-foreground/60 font-body max-w-xl mx-auto">
+            Everything you need to know about delivery and returns.
+          </p>
+        </div>
+
+        <div class="space-y-16">
+          <!-- Shipping Options -->
+          <section>
+            <h2 class="text-2xl font-heading mb-6">Shipping Options</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm font-body">
+                <thead>
+                  <tr class="border-b-2 border-foreground">
+                    <th class="py-3 px-4 text-left font-medium">Method</th>
+                    <th class="py-3 px-4 text-left font-medium">Delivery</th>
+                    <th class="py-3 px-4 text-left font-medium">Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-border">
+                    <td class="py-3 px-4">Regular</td>
+                    <td class="py-3 px-4">3–5 business days</td>
+                    <td class="py-3 px-4">Rp15.000</td>
+                  </tr>
+                  <tr class="border-b border-border">
+                    <td class="py-3 px-4">Express</td>
+                    <td class="py-3 px-4">1–2 business days</td>
+                    <td class="py-3 px-4">Rp35.000</td>
+                  </tr>
+                  <tr class="border-b border-border">
+                    <td class="py-3 px-4">Same Day</td>
+                    <td class="py-3 px-4">Order before 12:00 PM</td>
+                    <td class="py-3 px-4">Rp50.000</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-4">Free Shipping</td>
+                    <td class="py-3 px-4">3–5 business days</td>
+                    <td class="py-3 px-4">Orders over Rp500.000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-6 p-4 bg-foreground/5">
+              <p class="text-sm text-foreground/70 font-body">
+                We ship to all regions in Indonesia. Orders are processed within 1–2 business days.
+                Same-day delivery is available in selected areas (Jakarta, Bandung, Surabaya, Yogyakarta).
+              </p>
+            </div>
+          </section>
+
+          <!-- Return Policy -->
+          <section>
+            <h2 class="text-2xl font-heading mb-6">Return Policy</h2>
+            <p class="text-foreground/80 font-body leading-relaxed mb-6">
+              We accept returns within <strong>7 days</strong> of delivery. Bags must be in original
+              condition to be eligible for return.
+            </p>
+
+            <h3 class="text-lg font-heading mb-4">Return Conditions</h3>
+            <ul class="list-disc pl-6 space-y-2 font-body text-foreground/80 mb-6">
+              <li>Bags must be unused with no signs of wear</li>
+              <li>Original tags and packaging must be intact</li>
+              <li>Proof of purchase (order number or receipt) is required</li>
+              <li>Personalized or custom bags cannot be returned</li>
+            </ul>
+
+            <h3 class="text-lg font-heading mb-4">How to Return</h3>
+            <ol class="list-decimal pl-6 space-y-2 font-body text-foreground/80 mb-6">
+              <li>Contact our support team via WhatsApp or email with your order number</li>
+              <li>Receive a return authorization and shipping instructions</li>
+              <li>Pack the item securely with the original packaging</li>
+              <li>Ship the item back using the provided instructions</li>
+            </ol>
+
+            <h3 class="text-lg font-heading mb-4">Refunds</h3>
+            <ul class="list-disc pl-6 space-y-2 font-body text-foreground/80 mb-6">
+              <li>Refunds are processed within 7–14 business days of receiving the return</li>
+              <li>Refund will be issued to the original payment method</li>
+              <li>Shipping charges are non-refundable unless the item is faulty</li>
+            </ul>
+          </section>
+
+          <!-- Exchange -->
+          <section>
+            <h2 class="text-2xl font-heading mb-6">Exchanges</h2>
+            <p class="text-foreground/80 font-body leading-relaxed">
+              We offer free color exchanges within 7 days of delivery, subject to availability.
+              To exchange a bag, contact our support team with your order number and the
+              desired color or style. Exchange requests are processed once the original bag
+              is received and verified.
+            </p>
+          </section>
+
+          <!-- Defective Items -->
+          <section>
+            <h2 class="text-2xl font-heading mb-6">Faulty or Damaged Items</h2>
+            <p class="text-foreground/80 font-body leading-relaxed">
+              If you receive a damaged or faulty bag, please contact us within 48 hours of
+              delivery with photos. We will arrange a free replacement or full refund
+              including original shipping costs.
+            </p>
+          </section>
+
+          <!-- FAQ Link -->
+          <section class="pt-8 border-t border-border">
+            <h2 class="text-2xl font-heading mb-6">Still Have Questions?</h2>
+            <p class="text-foreground/70 font-body mb-6">
+              Visit our FAQ for more information or contact our support team.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="/faq" class="btn-secondary inline-block">Visit FAQ</a>
+              <a href="/contact" class="btn-primary inline-block">Contact Support</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

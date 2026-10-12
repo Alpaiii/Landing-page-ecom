@@ -1,0 +1,411 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Track Order';
+const description = 'Track your order status';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom max-w-3xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-3xl md:text-4xl font-heading mb-4">Track Your Order</h1>
+          <p class="text-foreground/70 font-body">Enter your order number to check status</p>
+        </div>
+
+        <!-- Search Form -->
+        <div id="search-form" class="mb-12">
+          <div class="max-w-xl mx-auto">
+            <label for="order-id-input" class="block text-sm tracking-wider uppercase font-body mb-3">Order Number</label>
+            <div class="flex gap-3">
+              <input
+                type="text"
+                id="order-id-input"
+                placeholder="ROQ-XXXXX"
+                class="flex-1 px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body uppercase"
+              />
+              <button
+                id="track-btn"
+                class="px-8 py-3 bg-foreground text-background text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors"
+              >
+                Track
+              </button>
+            </div>
+            <p id="search-error" class="text-sm text-red-500 font-body mt-2 hidden"></p>
+          </div>
+        </div>
+
+        <!-- Order Details -->
+        <div id="order-details" class="hidden">
+          <!-- Order Header -->
+          <div class="border border-border p-6 md:p-8 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h2 id="tracked-order-id" class="text-xl font-heading mb-2"></h2>
+                <p class="text-sm text-foreground/70 font-body">
+                  <span id="order-date"></span>
+                </p>
+              </div>
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent rounded-full">
+                <span class="w-2 h-2 rounded-full bg-accent"></span>
+                <span id="order-status" class="text-sm font-body font-medium"></span>
+              </div>
+            </div>
+
+            <!-- Estimated Delivery -->
+            <div class="p-4 bg-foreground/5">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 mt-0.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                <div>
+                  <p class="text-sm font-body font-medium mb-1">Estimated Delivery</p>
+                  <p id="order-estimated-delivery" class="text-sm text-foreground/70 font-body"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Timeline -->
+          <div class="border border-border p-6 md:p-8 mb-8">
+            <h2 class="text-xl tracking-wider uppercase font-body mb-8">Order Timeline</h2>
+            
+            <div class="space-y-6">
+              <!-- Order Placed -->
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="w-px h-full bg-accent"></div>
+                </div>
+                <div class="pb-6">
+                  <p class="text-sm font-body font-medium mb-1">Order Placed</p>
+                  <p id="timeline-placed" class="text-xs text-foreground/60 font-body"></p>
+                  <p class="text-xs text-foreground/60 font-body mt-1">Your order has been received</p>
+                </div>
+              </div>
+
+              <!-- Payment Confirmed -->
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="w-px h-full bg-accent"></div>
+                </div>
+                <div class="pb-6">
+                  <p class="text-sm font-body font-medium mb-1">Payment Confirmed</p>
+                  <p class="text-xs text-foreground/60 font-body">Payment has been verified</p>
+                </div>
+              </div>
+
+              <!-- Processing -->
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                  </div>
+                  <div class="w-px h-full bg-border"></div>
+                </div>
+                <div class="pb-6">
+                  <p class="text-sm font-body font-medium mb-1">Processing</p>
+                  <p class="text-xs text-foreground/60 font-body">We're preparing your order</p>
+                </div>
+              </div>
+
+              <!-- Shipped -->
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full border-2 border-border flex items-center justify-center flex-shrink-0">
+                    <div class="w-2 h-2 rounded-full bg-border"></div>
+                  </div>
+                  <div class="w-px h-full bg-border"></div>
+                </div>
+                <div class="pb-6">
+                  <p class="text-sm font-body font-medium mb-1 text-foreground/40">Shipped</p>
+                  <p class="text-xs text-foreground/40 font-body">Your order is on the way</p>
+                </div>
+              </div>
+
+              <!-- Delivered -->
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full border-2 border-border flex items-center justify-center flex-shrink-0">
+                    <div class="w-2 h-2 rounded-full bg-border"></div>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-sm font-body font-medium mb-1 text-foreground/40">Delivered</p>
+                  <p class="text-xs text-foreground/40 font-body">Order successfully delivered</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Items -->
+          <div class="border border-border p-6 md:p-8">
+            <h2 class="text-xl tracking-wider uppercase font-body mb-6">Order Items</h2>
+            <div id="tracked-order-items" class="space-y-4">
+              <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="space-y-3 pt-6 border-t border-border mt-6">
+              <div class="flex items-center justify-between text-sm font-body">
+                <span class="text-foreground/70">Subtotal</span>
+                <span id="tracked-subtotal"></span>
+              </div>
+              <div class="flex items-center justify-between text-sm font-body">
+                <span class="text-foreground/70">Shipping</span>
+                <span id="tracked-shipping"></span>
+              </div>
+              <div class="flex items-center justify-between text-lg font-body pt-3 border-t border-border">
+                <span class="font-medium">Total</span>
+                <span id="tracked-total" class="font-medium"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <button
+              id="track-another"
+              class="flex-1 py-4 border border-border text-center text-sm tracking-wider uppercase font-body hover:bg-foreground hover:text-background transition-colors"
+            >
+              Track Another Order
+            </button>
+            <a
+              href="/contact"
+              class="flex-1 py-4 bg-foreground text-background text-center text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors"
+            >
+              Contact Support
+            </a>
+          </div>
+        </div>
+
+        <!-- Recent Orders (from localStorage) -->
+        <div id="recent-orders" class="mt-16">
+          <h2 class="text-2xl font-heading mb-6">Recent Orders</h2>
+          <div id="recent-orders-list" class="space-y-4">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  function formatPrice(price: number): string {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  }
+
+  function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  const searchForm = document.getElementById('search-form');
+  const orderDetails = document.getElementById('order-details');
+  const searchError = document.getElementById('search-error');
+  const orderIdInput = document.getElementById('order-id-input') as HTMLInputElement;
+  const trackBtn = document.getElementById('track-btn');
+  const trackAnotherBtn = document.getElementById('track-another');
+
+  const API_URL = 'http://localhost:4000';
+
+  function showError(message: string) {
+    if (searchError) {
+      searchError.textContent = message;
+      searchError.classList.remove('hidden');
+    }
+  }
+
+  function hideError() {
+    searchError?.classList.add('hidden');
+  }
+
+  async function trackOrder(orderId: string) {
+    hideError();
+
+    // Get email from URL params or prompt
+    const urlParams = new URLSearchParams(window.location.search);
+    let email = urlParams.get('email');
+
+    if (!email) {
+      email = prompt('Please enter your email address:');
+      if (!email) return;
+    }
+
+    try {
+      if (trackBtn) trackBtn.textContent = 'Tracking...';
+
+      const response = await fetch(`${API_URL}/api/orders/track/${orderId}?email=${encodeURIComponent(email)}`);
+
+      if (!response.ok) {
+        showError('Order not found. Please check your order number and email.');
+        return;
+      }
+
+      const result = await response.json();
+      const order = result.data;
+
+      // Hide search form, show details
+      searchForm?.classList.add('hidden');
+      orderDetails?.classList.remove('hidden');
+
+      // Populate order details
+      const trackedOrderId = document.getElementById('tracked-order-id');
+      const orderDate = document.getElementById('order-date');
+      const orderStatus = document.getElementById('order-status');
+      const orderEstimatedDelivery = document.getElementById('order-estimated-delivery');
+      const timelinePlaced = document.getElementById('timeline-placed');
+
+      if (trackedOrderId) trackedOrderId.textContent = `Order #${order.id.substring(0, 8)}`;
+      if (orderDate) orderDate.textContent = formatDate(order.created_at);
+      if (orderStatus) orderStatus.textContent = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+      
+      // Calculate estimated delivery
+      const deliveryDays = order.shipping_method === 'same-day' ? 0 : order.shipping_method === 'express' ? 2 : 5;
+      const deliveryDate = new Date(order.created_at);
+      deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+      if (orderEstimatedDelivery) orderEstimatedDelivery.textContent = deliveryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      
+      if (timelinePlaced) timelinePlaced.textContent = formatDate(order.created_at);
+
+      // Populate order items
+      const trackedOrderItems = document.getElementById('tracked-order-items');
+      if (trackedOrderItems && order.items) {
+        trackedOrderItems.innerHTML = order.items.map((item: any) => `
+          <div class="flex gap-4">
+            <div class="w-20 h-24 flex-shrink-0 bg-foreground/5">
+              <img src="${item.image || '/images/placeholder.jpg'}" alt="${item.name}" class="w-full h-full object-cover" />
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-body mb-1">${item.name}</p>
+              <p class="text-xs text-foreground/60 font-body">Quantity: ${item.quantity}</p>
+              <p class="text-sm font-body font-medium mt-2">${formatPrice(item.price * item.quantity)}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Display totals
+      const trackedSubtotal = document.getElementById('tracked-subtotal');
+      const trackedShipping = document.getElementById('tracked-shipping');
+      const trackedTotal = document.getElementById('tracked-total');
+
+      if (trackedSubtotal) trackedSubtotal.textContent = formatPrice(order.subtotal);
+      if (trackedShipping) trackedShipping.textContent = order.shipping_cost > 0 ? formatPrice(order.shipping_cost) : 'Free';
+      if (trackedTotal) trackedTotal.textContent = formatPrice(order.total_amount);
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (e) {
+      console.error('Error tracking order:', e);
+      showError('An error occurred. Please try again.');
+    } finally {
+      if (trackBtn) trackBtn.textContent = 'Track';
+    }
+  }
+
+  function loadRecentOrders() {
+    try {
+      const orderHistory = JSON.parse(localStorage.getItem('roquace_order_history') || '[]');
+      const recentOrdersList = document.getElementById('recent-orders-list');
+      const recentOrdersSection = document.getElementById('recent-orders');
+
+      if (orderHistory.length === 0) {
+        recentOrdersSection?.classList.add('hidden');
+        return;
+      }
+
+      if (recentOrdersList) {
+        recentOrdersList.innerHTML = orderHistory.slice(0, 5).map((order: any) => `
+          <div class="border border-border p-4 hover:border-foreground transition-colors cursor-pointer" data-order-id="${order.orderId}">
+            <div class="flex items-center justify-between mb-2">
+              <p class="font-body font-medium">Order #${order.orderId}</p>
+              <span class="text-xs px-2 py-1 bg-accent/10 text-accent rounded">${order.status}</span>
+            </div>
+            <p class="text-sm text-foreground/60 font-body">${formatDate(order.date)}</p>
+            <p class="text-sm font-body font-medium mt-2">${formatPrice(order.total)}</p>
+          </div>
+        `).join('');
+
+        // Add click handlers
+        recentOrdersList.querySelectorAll('[data-order-id]').forEach((el) => {
+          el.addEventListener('click', () => {
+            const orderId = (el as HTMLElement).dataset.orderId;
+            if (orderId) {
+              orderIdInput.value = orderId;
+              trackOrder(orderId);
+            }
+          });
+        });
+      }
+    } catch (e) {
+      console.error('Error loading recent orders:', e);
+    }
+  }
+
+  // Track button
+  trackBtn?.addEventListener('click', () => {
+    const orderId = orderIdInput.value.trim().toUpperCase();
+    if (!orderId) {
+      showError('Please enter an order number');
+      return;
+    }
+    trackOrder(orderId);
+  });
+
+  // Enter key
+  orderIdInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      trackBtn?.click();
+    }
+  });
+
+  // Track another button
+  trackAnotherBtn?.addEventListener('click', () => {
+    searchForm?.classList.remove('hidden');
+    orderDetails?.classList.add('hidden');
+    orderIdInput.value = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Check URL for order ID
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlOrderId = urlParams.get('orderId');
+  if (urlOrderId) {
+    orderIdInput.value = urlOrderId;
+    trackOrder(urlOrderId);
+  }
+
+  // Load recent orders
+  loadRecentOrders();
+</script>

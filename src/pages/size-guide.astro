@@ -1,0 +1,229 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Bag Dimensions';
+const description = 'Find your perfect bag with our comprehensive dimension guide';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom max-w-4xl">
+        <div class="mb-16 text-center">
+          <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4 font-body">Dimensions Guide</p>
+          <h1 class="heading-lg mb-4">Bag Dimensions</h1>
+          <p class="text-foreground/60 font-body max-w-xl mx-auto">
+            All measurements are approximate and may vary by ±1-2 cm due to the handcrafted nature of our bags.
+          </p>
+        </div>
+
+        <!-- How to Measure -->
+        <section class="mb-16">
+          <h2 class="text-2xl font-heading mb-6">How We Measure</h2>
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="border border-border p-6">
+              <div class="w-10 h-10 mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </div>
+              <h3 class="font-heading mb-2">Width</h3>
+              <p class="text-sm text-foreground/70 font-body leading-relaxed">
+                Measured across the widest part of the bag from side to side.
+              </p>
+            </div>
+            <div class="border border-border p-6">
+              <div class="w-10 h-10 mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+              </div>
+              <h3 class="font-heading mb-2">Height</h3>
+              <p class="text-sm text-foreground/70 font-body leading-relaxed">
+                Measured from the top of the bag to the bottom, excluding handles or straps.
+              </p>
+            </div>
+            <div class="border border-border p-6">
+              <div class="w-10 h-10 mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8h16M4 16h16" />
+                </svg>
+              </div>
+              <h3 class="font-heading mb-2">Depth</h3>
+              <p class="text-sm text-foreground/70 font-body leading-relaxed">
+                Measured from front to back at the base of the bag.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tote Bags -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-heading mb-6">Tote Bags</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm font-body">
+              <thead>
+                <tr class="border-b-2 border-foreground">
+                  <th class="py-3 px-4 text-left font-medium">Style</th>
+                  <th class="py-3 px-4 text-center font-medium">Width (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Height (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Depth (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Handle Drop (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border">
+                  <td class="py-3 px-4 font-medium">Classic Tote</td>
+                  <td class="py-3 px-4 text-center">38</td>
+                  <td class="py-3 px-4 text-center">35</td>
+                  <td class="py-3 px-4 text-center">12</td>
+                  <td class="py-3 px-4 text-center">25</td>
+                </tr>
+                <tr class="border-b border-border">
+                  <td class="py-3 px-4 font-medium">Large Shopper</td>
+                  <td class="py-3 px-4 text-center">45</td>
+                  <td class="py-3 px-4 text-center">40</td>
+                  <td class="py-3 px-4 text-center">15</td>
+                  <td class="py-3 px-4 text-center">28</td>
+                </tr>
+                <tr class="border-b border-border">
+                  <td class="py-3 px-4 font-medium">Laptop Tote</td>
+                  <td class="py-3 px-4 text-center">40</td>
+                  <td class="py-3 px-4 text-center">32</td>
+                  <td class="py-3 px-4 text-center">10</td>
+                  <td class="py-3 px-4 text-center">22</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 font-medium">Foldable Tote</td>
+                  <td class="py-3 px-4 text-center">35</td>
+                  <td class="py-3 px-4 text-center">38</td>
+                  <td class="py-3 px-4 text-center">8</td>
+                  <td class="py-3 px-4 text-center">20</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Crossbody & Messenger -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-heading mb-6">Crossbody & Messenger Bags</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm font-body">
+              <thead>
+                <tr class="border-b-2 border-foreground">
+                  <th class="py-3 px-4 text-left font-medium">Style</th>
+                  <th class="py-3 px-4 text-center font-medium">Width (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Height (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Depth (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Strap Drop (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border">
+                  <td class="py-3 px-4 font-medium">Mini Crossbody</td>
+                  <td class="py-3 px-4 text-center">20</td>
+                  <td class="py-3 px-4 text-center">15</td>
+                  <td class="py-3 px-4 text-center">6</td>
+                  <td class="py-3 px-4 text-center">50-120 (adjustable)</td>
+                </tr>
+                <tr class="border-b border-border">
+                  <td class="py-3 px-4 font-medium">Messenger Bag</td>
+                  <td class="py-3 px-4 text-center">35</td>
+                  <td class="py-3 px-4 text-center">28</td>
+                  <td class="py-3 px-4 text-center">10</td>
+                  <td class="py-3 px-4 text-center">60-130 (adjustable)</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 font-medium">Bucket Bag</td>
+                  <td class="py-3 px-4 text-center">22</td>
+                  <td class="py-3 px-4 text-center">25</td>
+                  <td class="py-3 px-4 text-center">22</td>
+                  <td class="py-3 px-4 text-center">15</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Weekend & Travel -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-heading mb-6">Weekend & Travel Bags</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm font-body">
+              <thead>
+                <tr class="border-b-2 border-foreground">
+                  <th class="py-3 px-4 text-left font-medium">Style</th>
+                  <th class="py-3 px-4 text-center font-medium">Width (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Height (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Depth (cm)</th>
+                  <th class="py-3 px-4 text-center font-medium">Capacity</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border">
+                  <td class="py-3 px-4 font-medium">Weekend Bag</td>
+                  <td class="py-3 px-4 text-center">50</td>
+                  <td class="py-3 px-4 text-center">30</td>
+                  <td class="py-3 px-4 text-center">22</td>
+                  <td class="py-3 px-4 text-center">~30L</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 font-medium">Beach Bag</td>
+                  <td class="py-3 px-4 text-center">48</td>
+                  <td class="py-3 px-4 text-center">35</td>
+                  <td class="py-3 px-4 text-center">18</td>
+                  <td class="py-3 px-4 text-center">~25L</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Capacity Guide -->
+        <section class="mb-12 p-6 bg-foreground/5">
+          <h2 class="text-xl font-heading mb-4">What Fits Inside?</h2>
+          <ul class="space-y-3 font-body text-foreground/80">
+            <li class="flex gap-3">
+              <span class="text-accent">•</span>
+              <span><strong>Mini Crossbody</strong> - Phone, wallet, keys, small essentials</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-accent">•</span>
+              <span><strong>Classic Tote</strong> - 13" laptop, books, daily essentials, water bottle</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-accent">•</span>
+              <span><strong>Large Shopper</strong> - Groceries, gym clothes, multiple items for shopping</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-accent">•</span>
+              <span><strong>Messenger Bag</strong> - 15" laptop, documents, tablet, chargers</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="text-accent">•</span>
+              <span><strong>Weekend Bag</strong> - 2-3 days clothing, shoes, toiletries</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- CTA -->
+        <section class="pt-8 border-t border-border text-center">
+          <h2 class="text-2xl font-heading mb-4">Need Help Choosing?</h2>
+          <p class="text-foreground/70 font-body mb-6">
+            Our team is happy to help you find the perfect bag size.
+          </p>
+          <a href="/contact" class="btn-primary inline-block">Contact Us</a>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

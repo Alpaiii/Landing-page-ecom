@@ -1,0 +1,322 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Register';
+const description = 'Create your account';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-3xl md:text-4xl font-heading mb-4">Create Account</h1>
+          <p class="text-foreground/70 font-body">Join Roquace today</p>
+        </div>
+
+        <!-- Register Form -->
+        <form id="register-form" class="space-y-6 mb-8">
+          <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          </div>
+
+          <div>
+            <label for="name" class="block text-sm tracking-wider uppercase font-body mb-2">Full Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="John Doe"
+              autocomplete="name"
+            />
+            <p id="name-error" class="text-xs text-red-500 mt-1 hidden"></p>
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm tracking-wider uppercase font-body mb-2">Email *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+            <p id="email-error" class="text-xs text-red-500 mt-1 hidden"></p>
+          </div>
+
+          <div>
+            <label for="phone" class="block text-sm tracking-wider uppercase font-body mb-2">Phone</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="+62 812 3456 7890"
+              autocomplete="tel"
+            />
+            <p id="phone-error" class="text-xs text-red-500 mt-1 hidden"></p>
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm tracking-wider uppercase font-body mb-2">Password *</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="••••••••"
+              autocomplete="new-password"
+            />
+            <p id="password-error" class="text-xs text-red-500 mt-1 hidden"></p>
+            <p class="text-xs text-foreground/60 mt-1">Minimum 8 characters</p>
+          </div>
+
+          <div>
+            <label for="confirm-password" class="block text-sm tracking-wider uppercase font-body mb-2">Confirm Password *</label>
+            <input
+              type="password"
+              id="confirm-password"
+              name="confirm-password"
+              required
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="••••••••"
+              autocomplete="new-password"
+            />
+            <p id="confirm-password-error" class="text-xs text-red-500 mt-1 hidden"></p>
+          </div>
+
+          <div class="flex items-start">
+            <input
+              type="checkbox"
+              id="terms"
+              name="terms"
+              required
+              class="mt-1 mr-2"
+            />
+            <label for="terms" class="text-sm text-foreground/70 font-body">
+              I agree to the <a href="/terms" class="underline hover:text-foreground">Terms & Conditions</a> and <a href="/privacy" class="underline hover:text-foreground">Privacy Policy</a>
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            id="register-btn"
+            class="w-full bg-foreground text-background py-4 tracking-widest uppercase font-body hover:bg-foreground/90 transition-colors"
+          >
+            Create Account
+          </button>
+        </form>
+
+        <!-- Login Link -->
+        <div class="text-center">
+          <p class="text-foreground/70 font-body">
+            Already have an account? <a href="/login" class="underline hover:text-foreground">Sign in</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  const API_URL = 'http://localhost:4000';
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  const registerForm = document.getElementById('register-form') as HTMLFormElement;
+  const registerBtn = document.getElementById('register-btn') as HTMLButtonElement;
+  const formError = document.getElementById('form-error') as HTMLDivElement;
+
+  const nameField = document.getElementById('name') as HTMLInputElement;
+  const emailField = document.getElementById('email') as HTMLInputElement;
+  const phoneField = document.getElementById('phone') as HTMLInputElement;
+  const passwordField = document.getElementById('password') as HTMLInputElement;
+  const confirmPasswordField = document.getElementById('confirm-password') as HTMLInputElement;
+  const termsCheckbox = document.getElementById('terms') as HTMLInputElement;
+
+  function showFieldError(field: string, message: string) {
+    const error = document.getElementById(`${field}-error`);
+    if (error) {
+      error.textContent = message;
+      error.classList.remove('hidden');
+    }
+  }
+
+  function clearFieldError(field: string) {
+    const error = document.getElementById(`${field}-error`);
+    if (error) {
+      error.textContent = '';
+      error.classList.add('hidden');
+    }
+  }
+
+  function showFormError(message: string) {
+    formError.textContent = message;
+    formError.classList.remove('hidden');
+  }
+
+  function hideFormError() {
+    formError.classList.add('hidden');
+  }
+
+  function validateEmail(email: string): boolean {
+    return emailRegex.test(email);
+  }
+
+  function validatePassword(password: string): boolean {
+    return password.length >= 8;
+  }
+
+  // Real-time validation
+  emailField.addEventListener('blur', () => {
+    const value = emailField.value.trim();
+    if (value && !validateEmail(value)) {
+      showFieldError('email', 'Please enter a valid email address');
+    } else {
+      clearFieldError('email');
+    }
+  });
+
+  passwordField.addEventListener('blur', () => {
+    const value = passwordField.value;
+    if (value && !validatePassword(value)) {
+      showFieldError('password', 'Password must be at least 8 characters');
+    } else {
+      clearFieldError('password');
+    }
+  });
+
+  confirmPasswordField.addEventListener('blur', () => {
+    if (confirmPasswordField.value && confirmPasswordField.value !== passwordField.value) {
+      showFieldError('confirm-password', 'Passwords do not match');
+    } else {
+      clearFieldError('confirm-password');
+    }
+  });
+
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideFormError();
+
+    const name = nameField.value.trim();
+    const email = emailField.value.trim();
+    const phone = phoneField.value.trim();
+    const password = passwordField.value;
+    const confirmPassword = confirmPasswordField.value;
+
+    let hasError = false;
+
+    // Validate name
+    if (!name) {
+      showFieldError('name', 'Name is required');
+      hasError = true;
+    } else {
+      clearFieldError('name');
+    }
+
+    // Validate email
+    if (!email) {
+      showFieldError('email', 'Email is required');
+      hasError = true;
+    } else if (!validateEmail(email)) {
+      showFieldError('email', 'Please enter a valid email address');
+      hasError = true;
+    } else {
+      clearFieldError('email');
+    }
+
+    // Validate password
+    if (!password) {
+      showFieldError('password', 'Password is required');
+      hasError = true;
+    } else if (!validatePassword(password)) {
+      showFieldError('password', 'Password must be at least 8 characters');
+      hasError = true;
+    } else {
+      clearFieldError('password');
+    }
+
+    // Validate confirm password
+    if (!confirmPassword) {
+      showFieldError('confirm-password', 'Please confirm your password');
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      showFieldError('confirm-password', 'Passwords do not match');
+      hasError = true;
+    } else {
+      clearFieldError('confirm-password');
+    }
+
+    // Validate terms
+    if (!termsCheckbox.checked) {
+      showFormError('Please accept the Terms & Conditions');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    // Show loading state
+    registerBtn.textContent = 'Creating Account...';
+    registerBtn.setAttribute('disabled', 'true');
+
+    try {
+      const response = await fetch(`${API_URL}/api/customers/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phone || null,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store token and user data
+        localStorage.setItem('customer_token', data.token);
+        localStorage.setItem('roquace_session', JSON.stringify({
+          user: data.customer,
+          loggedIn: true,
+          loginTime: new Date().toISOString()
+        }));
+
+        // Redirect to account
+        window.location.href = '/account';
+      } else {
+        showFormError(data.error || 'Registration failed. Please try again.');
+        registerBtn.textContent = 'Create Account';
+        registerBtn.removeAttribute('disabled');
+      }
+    } catch (error) {
+      showFormError('Failed to connect to server. Please try again.');
+      registerBtn.textContent = 'Create Account';
+      registerBtn.removeAttribute('disabled');
+    }
+  });
+
+  // Check if already logged in
+  try {
+    const session = JSON.parse(localStorage.getItem('roquace_session') || '{}');
+    if (session.loggedIn) {
+      window.location.href = '/account';
+    }
+  } catch (e) {
+    // Not logged in
+  }
+</script>

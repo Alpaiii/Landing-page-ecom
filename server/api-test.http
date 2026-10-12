@@ -1,0 +1,62 @@
+### Test Roquace Backend API
+
+@baseUrl = http://localhost:4000
+@token = your-token-here
+
+### Health Check
+GET {{baseUrl}}
+
+### Get All Products (Public)
+GET {{baseUrl}}/api/products
+
+### Get Single Product (Public)
+GET {{baseUrl}}/api/products/your-product-id
+
+### Admin Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@roquace.com",
+  "password": "admin123"
+}
+
+### Verify Token
+GET {{baseUrl}}/api/auth/verify
+Authorization: Bearer {{token}}
+
+### Create Product (Admin Only)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Test Product",
+  "slug": "test-product",
+  "description": "Test description",
+  "price": 99.99,
+  "compare_price": 149.99,
+  "category": "Clothing",
+  "subcategory": "Shirts",
+  "images": ["https://via.placeholder.com/800"],
+  "colors": ["Red", "Blue"],
+  "sizes": ["S", "M", "L"],
+  "tags": ["test", "new"],
+  "stock": 100,
+  "is_featured": false,
+  "is_new": true
+}
+
+### Update Product (Admin Only)
+PUT {{baseUrl}}/api/products/your-product-id
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "price": 79.99,
+  "stock": 50
+}
+
+### Delete Product (Admin Only)
+DELETE {{baseUrl}}/api/products/your-product-id
+Authorization: Bearer {{token}}

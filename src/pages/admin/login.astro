@@ -1,0 +1,246 @@
+---
+export const prerender = false;
+
+// Redirect if already logged in
+const token = Astro.cookies.get('admin_token')?.value;
+if (token) {
+  return Astro.redirect('/admin/dashboard');
+}
+
+const title = 'Admin Login - Roquace';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    
+    .login-container {
+      background: white;
+      padding: 3rem;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 420px;
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .logo h1 {
+      font-size: 2rem;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+    }
+    
+    .logo p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem;
+      border: 2px solid #e5e5e5;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      display: none;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .submit-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .demo-credentials {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    
+    .demo-credentials p {
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    
+    .demo-credentials code {
+      display: block;
+      color: #333;
+      font-family: 'Courier New', monospace;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>Roquace Admin</h1>
+      <p>Sign in to manage your store</p>
+    </div>
+    
+    <div class="error-message" id="error-message"></div>
+    
+    <form id="login-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required 
+          placeholder="admin@roquace.com"
+          autocomplete="email"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          required 
+          placeholder="Enter your password"
+          autocomplete="current-password"
+        />
+      </div>
+      
+      <button type="submit" class="submit-btn" id="submit-btn">
+        Sign In
+      </button>
+    </form>
+    
+    <div class="demo-credentials">
+      <p><strong>Demo Credentials:</strong></p>
+      <code>Email: admin@roquace.com</code>
+      <code>Password: admin123</code>
+    </div>
+  </div>
+  
+  <script>
+    const API_URL = 'http://localhost:4000';
+    const form = document.getElementById('login-form') as HTMLFormElement;
+    const errorMessage = document.getElementById('error-message') as HTMLDivElement;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+    
+    function showError(message: string) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add('show');
+    }
+    
+    function hideError() {
+      errorMessage.classList.remove('show');
+    }
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      
+      const formData = new FormData(form);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+      
+      try {
+        const response = await fetch(`${API_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          // Store token in cookie
+          document.cookie = `admin_token=${data.token}; path=/; max-age=604800; SameSite=Lax`; // 7 days
+          
+          // Force page reload to dashboard
+          window.location.replace('/admin/dashboard');
+        } else {
+          showError(data.error || 'Invalid credentials');
+        }
+      } catch (error) {
+        showError('Failed to connect to server. Make sure backend is running.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

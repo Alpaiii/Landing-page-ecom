@@ -1,10 +1,13 @@
 {
-  "name": "fashion-template",
+  "name": "roquace",
   "type": "module",
   "version": "1.0.0",
   "scripts": {
     "dev": "astro dev",
+    "dev:server": "cd server && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "astro build",
+    "build:server": "cd server && npm run build",
     "preview": "astro preview"
   },
   "dependencies": {
@@ -13,5 +16,8 @@
     "tailwindcss": "^3.4.17",
     "sharp": "^0.33.5",
     "lucide": "^0.469.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

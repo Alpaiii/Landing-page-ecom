@@ -10,7 +10,7 @@ interface Props {
 const { name, description, image, slug, featured = false } = Astro.props;
 ---
 
-<a href={`/shop/${slug}`} class={`group relative block overflow-hidden ${featured ? 'aspect-[3/4] md:aspect-[4/5]' : 'aspect-[3/4]'}`}>
+<a href={`/shop?collection=${slug}`} class={`group relative block overflow-hidden ${featured ? 'aspect-[3/4] md:aspect-[4/5]' : 'aspect-[3/4]'}`}>
   <img
     src={image}
     alt={name}

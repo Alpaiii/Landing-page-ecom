@@ -1,0 +1,84 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AnnouncementBar from '../../components/AnnouncementBar.astro';
+import Navbar from '../../components/Navbar.astro';
+import ProductListing from '../../components/ProductListing.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import Footer from '../../components/Footer.astro';
+import { products, getProductsByCategory, getProductsByBadge } from '../../data/products';
+import { getCategoryBySlug } from '../../data/categories';
+
+/**
+ * Category slugs fall into two groups:
+ *  - real product categories (women, men, accessories)
+ *  - "new-arrivals", which is a badge-based listing rather than a category
+ */
+function resolveCategory(slug: string) {
+  const category = getCategoryBySlug(slug);
+
+  if (category && category.slug !== 'new-arrivals') {
+    return {
+      name: category.name,
+      description: category.description,
+      products: getProductsByCategory(category.id as never),
+      /** Only a real category can pre-check the sidebar's category filter. */
+      initialCategory: category.id,
+    };
+  }
+
+  if (slug === 'new-arrivals') {
+    return {
+      name: 'New Arrivals',
+      description: 'Fresh styles just dropped. Be the first to shop our latest pieces.',
+      products: getProductsByBadge('New'),
+      initialCategory: undefined,
+    };
+  }
+
+  return null;
+}
+
+export function getStaticPaths() {
+  const productCategories = Array.from(new Set(products.map((product) => product.category)));
+
+  // "new-arrivals" is listed in categories.ts but has no products tagged with
+  // that category, so it is added explicitly.
+  return [...productCategories, 'new-arrivals'].map((category) => ({
+    params: { category },
+  }));
+}
+
+const { category: slug } = Astro.params;
+const resolved = resolveCategory(slug!);
+
+if (!resolved) {
+  return Astro.redirect('/shop');
+}
+
+const title = resolved.name;
+const description = resolved.description;
+const categoryProducts = resolved.products;
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <div class="container-custom mb-8">
+      <Breadcrumb
+        items={[{ label: 'Home', href: '/' }, { label: 'Shop', href: '/shop' }, { label: title }]}
+      />
+    </div>
+
+    <ProductListing
+      products={categoryProducts}
+      heading={title}
+      eyebrow="Collection"
+      intro={description}
+      initialCategory={resolved.initialCategory}
+    />
+  </main>
+
+  <Footer />
+</Layout>

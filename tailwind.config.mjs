@@ -4,12 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: 'var(--color-background)',
-        foreground: 'var(--color-foreground)',
-        muted: 'var(--color-muted)',
-        accent: 'var(--color-accent)',
-        'accent-light': 'var(--color-accent-light)',
-        border: 'var(--color-border)',
+        background: 'rgb(var(--color-background-rgb) / <alpha-value>)',
+        foreground: 'rgb(var(--color-foreground-rgb) / <alpha-value>)',
+        muted: 'rgb(var(--color-muted-rgb) / <alpha-value>)',
+        accent: 'rgb(var(--color-accent-rgb) / <alpha-value>)',
+        'accent-light': 'rgb(var(--color-accent-light-rgb) / <alpha-value>)',
+        border: 'rgb(var(--color-border-rgb) / <alpha-value>)',
+        secondary: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
+        error: 'rgb(var(--color-error-rgb) / <alpha-value>)',
+      },
+      boxShadow: {
+        accent: '0 10px 15px -3px rgb(var(--color-accent-rgb) / 0.2)',
+        'accent-strong': '0 10px 15px -3px rgb(var(--color-accent-rgb) / 0.3)',
+        foreground: '0 10px 15px -3px rgb(var(--color-foreground-rgb) / 0.2)',
       },
       fontFamily: {
         heading: ['"Playfair Display"', 'Georgia', 'serif'],

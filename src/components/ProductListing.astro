@@ -1,0 +1,322 @@
+---
+import FilterSidebar from './FilterSidebar.astro';
+import ActiveFilters from './ActiveFilters.astro';
+import ProductCardV2 from './ProductCardV2.astro';
+import ProductCardSkeleton from './ProductCardSkeleton.astro';
+import type { Product } from '../data/products';
+
+interface Props {
+  products: Product[];
+  /** Pre-checked filter values, used by the category route. */
+  initialCategory?: string;
+  heading: string;
+  eyebrow?: string;
+  intro?: string;
+}
+
+const { products, initialCategory, heading, eyebrow, intro } = Astro.props;
+
+const sortOptions = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'bestselling', label: 'Best Selling' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'highest-rated', label: 'Highest Rated' },
+];
+---
+
+<section class="section-padding">
+  <div class="container-custom">
+    <div class="mb-12">
+      {eyebrow && <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4 font-body">{eyebrow}</p>}
+      <h1 class="heading-xl mb-4">{heading}</h1>
+      {intro && <p class="text-foreground/60 font-body max-w-2xl">{intro}</p>}
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+      <FilterSidebar initialCategory={initialCategory} />
+
+      <div class="flex-1 min-w-0">
+        <ActiveFilters />
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <p id="product-count" class="text-sm text-foreground/60 font-body" role="status" aria-live="polite">
+            Showing {products.length} products
+          </p>
+
+          <div class="relative w-full sm:w-auto">
+            <label for="sort-select" class="sr-only">Sort products</label>
+            <select
+              id="sort-select"
+              aria-label="Sort products"
+              class="appearance-none w-full sm:w-auto px-5 py-2.5 pr-10 text-sm tracking-wider uppercase font-body border border-border bg-background cursor-pointer focus:outline-none focus:border-foreground"
+            >
+              {sortOptions.map((option) => (
+                <option value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <svg class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <!--
+  The grid is server-rendered, so the skeleton is not needed on first paint.
+  It appears only while a filter or sort change re-renders the results, which
+  is the one moment this page actually does client-side work.
+-->
+        <div
+          id="product-skeleton"
+          class="mb-8 hidden"
+          role="status"
+          aria-live="polite"
+          aria-label="Updating products"
+        >
+          <ProductCardSkeleton count={products.length} />
+        </div>
+
+        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          {products.map((product, index) => (
+            <ProductCardV2 product={product} index={index} />
+          ))}
+        </div>
+
+        <div id="empty-state" class="hidden text-center py-16" role="status" aria-live="polite">
+          <svg class="w-16 h-16 mx-auto mb-6 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <h2 class="text-2xl font-heading mb-2">No products found</h2>
+          <p class="text-foreground/60 font-body mb-6">Try adjusting your filters</p>
+          <button type="button" id="reset-filters-btn" class="btn-secondary">
+            Clear All Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  interface FilterState {
+    category: string[];
+    price: string[];
+    size: string[];
+    color: string[];
+    availability: string[];
+    rating: string[];
+    discount: string[];
+  }
+
+  const productGrid = document.getElementById('product-grid');
+  const productCount = document.getElementById('product-count');
+  const emptyState = document.getElementById('empty-state');
+  const sortSelect = document.getElementById('sort-select') as HTMLSelectElement;
+  const resetFiltersBtn = document.getElementById('reset-filters-btn');
+  const productSkeleton = document.getElementById('product-skeleton');
+
+  function getProductCards(): HTMLElement[] {
+    return Array.from(productGrid?.querySelectorAll('[data-product-card]') || []);
+  }
+
+  function getActiveFilters(): FilterState {
+    const filters: FilterState = {
+      category: [],
+      price: [],
+      size: [],
+      color: [],
+      availability: [],
+      rating: [],
+      discount: [],
+    };
+
+    document.querySelectorAll<HTMLInputElement>('.filter-checkbox:checked').forEach((checkbox) => {
+      const name = checkbox.name as keyof FilterState;
+      if (filters[name]) filters[name].push(checkbox.value);
+    });
+
+    return filters;
+  }
+
+  function matchesFilters(card: HTMLElement, filters: FilterState): boolean {
+    if (filters.category.length && !filters.category.includes(card.dataset.category ?? '')) return false;
+
+    if (filters.price.length) {
+      const price = Number(card.dataset.price || 0);
+      const ok = filters.price.some((range) => {
+        const [min, max] = range.split('-').map(Number);
+        return price >= min && (max === Infinity || price <= max);
+      });
+      if (!ok) return false;
+    }
+
+    if (filters.size.length) {
+      const sizes = (card.dataset.sizes || '').split(',');
+      if (!filters.size.some((size) => sizes.includes(size))) return false;
+    }
+
+    if (filters.color.length) {
+      const colors = (card.dataset.colors || '').toLowerCase().split(',');
+      const ok = filters.color.some((color) => colors.some((c) => c.includes(color.toLowerCase())));
+      if (!ok) return false;
+    }
+
+    if (filters.availability.length) {
+      const inStock = card.dataset.inStock === 'true';
+      const stockCount = Number(card.dataset.stockCount || 0);
+      if (filters.availability.includes('in-stock') && !inStock) return false;
+      if (filters.availability.includes('low-stock') && (stockCount === 0 || stockCount >= 10)) return false;
+    }
+
+    if (filters.rating.length) {
+      const rating = Number(card.dataset.rating || 0);
+      if (!filters.rating.some((min) => rating >= Number(min))) return false;
+    }
+
+    if (filters.discount.length && card.dataset.hasDiscount !== 'true') return false;
+
+    return true;
+  }
+
+  function applyFilters() {
+    const filters = getActiveFilters();
+    let visible = 0;
+
+    getProductCards().forEach((card) => {
+      const show = matchesFilters(card, filters);
+      card.classList.toggle('is-filtered-out', !show);
+      if (show) visible += 1;
+    });
+
+    if (productCount) {
+      productCount.textContent = `Showing ${visible} product${visible !== 1 ? 's' : ''}`;
+    }
+
+    productGrid?.classList.toggle('hidden', visible === 0);
+    emptyState?.classList.toggle('hidden', visible > 0);
+  }
+
+  function applySort() {
+    const value = sortSelect?.value || 'featured';
+
+    const comparators: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
+      featured: (a, b) => Number(a.dataset.order) - Number(b.dataset.order),
+      newest: (a, b) => {
+        const diff = Number(b.dataset.badge === 'New') - Number(a.dataset.badge === 'New');
+        return diff !== 0 ? diff : Number(a.dataset.order) - Number(b.dataset.order);
+      },
+      bestselling: (a, b) => Number(b.dataset.reviews) - Number(a.dataset.reviews),
+      'price-low': (a, b) => Number(a.dataset.price) - Number(b.dataset.price),
+      'price-high': (a, b) => Number(b.dataset.price) - Number(a.dataset.price),
+      'highest-rated': (a, b) => {
+        const byRating = Number(b.dataset.rating) - Number(a.dataset.rating);
+        return byRating !== 0 ? byRating : Number(b.dataset.reviews) - Number(a.dataset.reviews);
+      },
+    };
+
+    const compare = comparators[value] || comparators.featured;
+    [...getProductCards()].sort(compare).forEach((card) => productGrid?.appendChild(card));
+  }
+
+  /**
+   * Applies a `?category=`, `?filter=` or `?search=` query on first paint, so
+   * deep links such as `/shop?category=women` or `/shop?search=hoodie` land on
+   * an already-filtered grid instead of the unfiltered one.
+   */
+  function applyQueryParams(): void {
+    const params = new URLSearchParams(window.location.search);
+
+    // `/shop?search=oversized tee` and `/shop?q=hoodie` are both in use across
+    // the site, so both are accepted.
+    const query = (params.get('search') ?? params.get('q') ?? '').trim().toLowerCase();
+
+    if (query) {
+      getProductCards().forEach((card) => {
+        const haystack = [
+          card.dataset.name,
+          card.dataset.category,
+          card.dataset.subcategory,
+          card.dataset.tags,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        card.classList.toggle('is-filtered-out', !haystack.includes(query));
+      });
+
+      if (productCount) {
+        const visible = getProductCards().filter((card) => !card.classList.contains('is-filtered-out')).length;
+        productCount.textContent = `Showing ${visible} product${visible !== 1 ? 's' : ''} for "${query}"`;
+      }
+
+      productGrid?.classList.toggle('hidden', getProductCards().every((card) => card.classList.contains('is-filtered-out')));
+      emptyState?.classList.toggle('hidden', !getProductCards().every((card) => card.classList.contains('is-filtered-out')));
+
+      const reset = resetFiltersBtn;
+      if (reset) reset.textContent = 'Clear Search';
+
+      return;
+    }
+
+    const category = params.get('category');
+    if (category) {
+      const target = document.querySelector<HTMLInputElement>(
+        `.filter-checkbox[name="category"][value="${CSS.escape(category)}"]`
+      );
+      if (target) target.checked = true;
+    }
+
+    // `?filter=new` and `?filter=bestseller` map onto badge filters.
+    const badgeFilter = params.get('filter');
+    if (badgeFilter) {
+      const badge = badgeFilter === 'bestseller' ? 'Best Seller' : badgeFilter === 'new' ? 'New' : badgeFilter;
+
+      getProductCards().forEach((card) => {
+        card.classList.toggle('is-filtered-out', card.dataset.badge !== badge);
+      });
+
+      if (productCount) {
+        const visible = getProductCards().filter((card) => !card.classList.contains('is-filtered-out')).length;
+        productCount.textContent = `Showing ${visible} product${visible !== 1 ? 's' : ''}`;
+      }
+
+      const allHidden = getProductCards().every((card) => card.classList.contains('is-filtered-out'));
+      productGrid?.classList.toggle('hidden', allHidden);
+      emptyState?.classList.toggle('hidden', !allHidden);
+    }
+  }
+
+  // Filtering and sorting are synchronous, so the skeleton is only worth
+  // showing if the work ever becomes expensive enough to be perceptible.
+  function withPendingState(work: () => void) {
+    if (!productSkeleton) {
+      work();
+      return;
+    }
+
+    productSkeleton.classList.remove('hidden');
+    productGrid?.classList.add('hidden');
+
+    window.requestAnimationFrame(() => {
+      work();
+      productSkeleton.classList.add('hidden');
+      productGrid?.classList.remove('hidden');
+    });
+  }
+
+  window.addEventListener('filters-changed', () => withPendingState(applyFilters));
+  sortSelect?.addEventListener('change', () => withPendingState(applySort));
+
+  resetFiltersBtn?.addEventListener('click', () => {
+    document.querySelectorAll<HTMLInputElement>('.filter-checkbox').forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+    window.dispatchEvent(new CustomEvent('filters-changed'));
+  });
+
+  applyQueryParams();
+  applyFilters();
+  applySort();
+</script>

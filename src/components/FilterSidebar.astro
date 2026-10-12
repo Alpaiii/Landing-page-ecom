@@ -1,0 +1,367 @@
+---
+import { products } from '../data/products';
+
+// Extract unique values from products for filters
+const categories = [...new Set(products.map(p => p.category))];
+const allColors = [...new Set(products.flatMap(p => p.colors.map(c => c.name)))];
+const allSizes = [...new Set(products.flatMap(p => p.sizes.map(s => s.name)))];
+
+// Price ranges
+const priceRanges = [
+  { label: 'Under Rp200K', min: 0, max: 200000 },
+  { label: 'Rp200K - Rp300K', min: 200000, max: 300000 },
+  { label: 'Rp300K - Rp400K', min: 300000, max: 400000 },
+  { label: 'Rp400K - Rp500K', min: 400000, max: 500000 },
+  { label: 'Over Rp500K', min: 500000, max: Infinity },
+];
+
+// Ratings
+const ratings = [5, 4, 3, 2, 1];
+
+interface Props {
+  /** Pre-checks a category filter, used by the /shop/[category] route. */
+  initialCategory?: string;
+}
+
+const { initialCategory } = Astro.props;
+---
+
+<aside class="filter-sidebar w-full lg:w-64 flex-shrink-0">
+  <!-- Mobile Filter Button -->
+  <button
+    id="mobile-filter-btn"
+    class="lg:hidden w-full flex items-center justify-between px-6 py-3 border border-border hover:bg-foreground/5 transition-colors mb-6"
+  >
+    <span class="text-sm tracking-wider uppercase font-body">Filter</span>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+    </svg>
+  </button>
+
+  <!-- Filter Panel -->
+  <div id="filter-panel" class="hidden lg:block">
+    <!-- Category Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Category</h3>
+      <div class="space-y-2">
+        {categories.map((category) => (
+          <label class="flex items-center cursor-pointer group">
+            <input
+              type="checkbox"
+              name="category"
+              value={category}
+              checked={category === initialCategory}
+              class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+            />
+            <span class="ml-3 text-sm font-body text-foreground/70 group-hover:text-foreground capitalize">
+              {category}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <!-- Price Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Price</h3>
+      <div class="space-y-2">
+        {priceRanges.map((range) => (
+          <label class="flex items-center cursor-pointer group">
+            <input
+              type="checkbox"
+              name="price"
+              value={`${range.min}-${range.max}`}
+              class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+            />
+            <span class="ml-3 text-sm font-body text-foreground/70 group-hover:text-foreground">
+              {range.label}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <!-- Size Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Size</h3>
+      <div class="flex flex-wrap gap-2">
+        {allSizes.map((size) => (
+          <label class="cursor-pointer">
+            <input
+              type="checkbox"
+              name="size"
+              value={size}
+              class="sr-only filter-checkbox"
+            />
+            <span class="size-chip inline-block px-4 py-2 text-xs tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+              {size}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <!-- Color Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Color</h3>
+      <div class="space-y-2">
+        {allColors.map((color) => (
+          <label class="flex items-center cursor-pointer group">
+            <input
+              type="checkbox"
+              name="color"
+              value={color}
+              class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+            />
+            <span class="ml-3 text-sm font-body text-foreground/70 group-hover:text-foreground capitalize">
+              {color}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <!-- Availability Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Availability</h3>
+      <div class="space-y-2">
+        <label class="flex items-center cursor-pointer group">
+          <input
+            type="checkbox"
+            name="availability"
+            value="in-stock"
+            class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+          />
+          <span class="ml-3 text-sm font-body text-foreground/70 group-hover:text-foreground">
+            In Stock
+          </span>
+        </label>
+        <label class="flex items-center cursor-pointer group">
+          <input
+            type="checkbox"
+            name="availability"
+            value="low-stock"
+            class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+          />
+          <span class="ml-3 text-sm font-body text-foreground/70 group-hover:text-foreground">
+            Low Stock
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Rating Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Rating</h3>
+      <div class="space-y-2">
+        {ratings.map((rating) => (
+          <label class="flex items-center cursor-pointer group">
+            <input
+              type="checkbox"
+              name="rating"
+              value={rating}
+              class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+            />
+            <span class="ml-3 flex items-center gap-1 text-sm font-body text-foreground/70 group-hover:text-foreground">
+              <span>{rating}</span>
+              <svg class="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span>& up</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <!-- Discount Filter -->
+    <div class="filter-group mb-8">
+      <h3 class="text-sm tracking-wider uppercase font-body mb-4">Discount</h3>
+      <div class="space-y-2">
+        <label class="flex items-center cursor-pointer group">
+          <input
+            type="checkbox"
+            name="discount"
+            value="on-sale"
+            class="filter-checkbox w-4 h-4 border border-border rounded-sm cursor-pointer focus:ring-1 focus:ring-foreground"
+          />
+          <span class="ml-3 text-sm font-body text-foreground/70 group-hover:text-foreground">
+            On Sale
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Clear Filters -->
+    <button
+      id="clear-filters"
+      data-clear-filters
+      class="w-full py-3 text-sm tracking-wider uppercase font-body border border-border hover:bg-foreground hover:text-background transition-colors"
+    >
+      Clear All Filters
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile Filter Drawer -->
+<div id="filter-drawer" class="fixed inset-0 z-50 lg:hidden hidden">
+  <!-- Backdrop -->
+  <div id="filter-backdrop" class="absolute inset-0 bg-black/50"></div>
+  
+  <!-- Drawer -->
+  <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-background overflow-y-auto transform transition-transform duration-300 translate-x-full" id="filter-drawer-panel">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-lg tracking-wider uppercase font-body">Filters</h2>
+        <button id="close-filter-drawer" class="p-2 hover:bg-foreground/5 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Same filter content as sidebar -->
+      <div id="filter-drawer-content">
+        <!-- Content cloned from sidebar -->
+      </div>
+
+      <!-- Apply Button -->
+      <button
+        id="apply-filters"
+        class="w-full py-4 bg-foreground text-background text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors mt-6"
+      >
+        Apply Filters
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .filter-checkbox:checked {
+    background-color: currentColor;
+    border-color: currentColor;
+  }
+
+  .filter-checkbox:checked + .size-chip {
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    border-color: var(--color-foreground);
+  }
+
+  #filter-drawer-panel.open {
+    transform: translateX(0);
+  }
+</style>
+
+<script>
+  import { trapFocus } from '../utils/focusTrap';
+
+  const mobileFilterBtn = document.getElementById('mobile-filter-btn');
+  const filterDrawer = document.getElementById('filter-drawer');
+  const filterDrawerPanel = document.getElementById('filter-drawer-panel');
+  const closeDrawerBtn = document.getElementById('close-filter-drawer');
+  const filterBackdrop = document.getElementById('filter-backdrop');
+  const applyFiltersBtn = document.getElementById('apply-filters');
+  const sidebarPanel = document.getElementById('filter-panel');
+  const drawerContent = document.getElementById('filter-drawer-content');
+
+  let releaseFocusTrap: (() => void) | null = null;
+
+  function openDrawer() {
+    filterDrawer?.classList.remove('hidden');
+    setTimeout(() => {
+      filterDrawerPanel?.classList.add('open');
+    }, 10);
+    document.body.style.overflow = 'hidden';
+
+    if (filterDrawerPanel) {
+      filterDrawer.setAttribute('role', 'dialog');
+      filterDrawer.setAttribute('aria-modal', 'true');
+      filterDrawer.setAttribute('aria-label', 'Filters');
+      releaseFocusTrap?.();
+      releaseFocusTrap = trapFocus(filterDrawerPanel, { onEscape: closeDrawer });
+    }
+  }
+
+  function closeDrawer() {
+    releaseFocusTrap?.();
+    releaseFocusTrap = null;
+
+    filterDrawerPanel?.classList.remove('open');
+    setTimeout(() => {
+      filterDrawer?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }, 300);
+  }
+
+  // The mobile drawer is a mirror of the desktop sidebar. Rather than
+  // maintaining two sets of controls, clone the sidebar once on first open and
+  // keep the checkbox states in sync. IDs are stripped from the clone so the
+  // document never contains duplicates.
+  function syncFrom(source: HTMLElement) {
+    const inputs = source.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+
+    inputs.forEach((input, index) => {
+      const counterparts = document.querySelectorAll<HTMLInputElement>(
+        `input[type="checkbox"][name="${input.name}"][value="${CSS.escape(input.value)}"]`
+      );
+
+      counterparts.forEach((counterpart) => {
+        counterpart.checked = input.checked;
+      });
+    });
+
+    window.dispatchEvent(new CustomEvent('filters-changed'));
+  }
+
+  function buildDrawer() {
+    if (!sidebarPanel || !drawerContent || drawerContent.children.length > 0) return;
+
+    const clone = sidebarPanel.cloneNode(true) as HTMLElement;
+    clone.id = 'filter-drawer-panel-content';
+    clone.classList.remove('hidden');
+    clone.classList.add('block');
+
+    // Cloned controls must not reuse the sidebar's ids.
+    clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+    drawerContent.appendChild(clone);
+
+    // Clearing from the drawer clears the sidebar too.
+    clone.querySelectorAll('[data-clear-filters]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll<HTMLInputElement>('.filter-checkbox').forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        window.dispatchEvent(new CustomEvent('filters-changed'));
+      });
+    });
+  }
+
+  mobileFilterBtn?.addEventListener('click', () => {
+    buildDrawer();
+    openDrawer();
+  });
+
+  closeDrawerBtn?.addEventListener('click', closeDrawer);
+  filterBackdrop?.addEventListener('click', closeDrawer);
+  applyFiltersBtn?.addEventListener('click', closeDrawer);
+
+  // Clear filters (sidebar and any clone)
+  document.querySelectorAll('[data-clear-filters]').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll<HTMLInputElement>('.filter-checkbox').forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      window.dispatchEvent(new CustomEvent('filters-changed'));
+    });
+  });
+
+  // One delegated listener covers the sidebar and the drawer clone. This also
+  // handles clones created after this listener was attached.
+  document.addEventListener('change', (event) => {
+    const target = event.target as HTMLInputElement;
+    if (!target?.matches?.('.filter-checkbox')) return;
+    syncFrom(target.closest<HTMLElement>('[id]') ?? document.body);
+  });
+</script>

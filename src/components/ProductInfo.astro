@@ -1,0 +1,534 @@
+---
+import type { Product } from '../data/products';
+import { siteConfig } from '../config/site';
+import { generateProductInquiryMessage, generateWhatsAppUrl } from '../utils/whatsapp';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+const whatsappNumber = siteConfig.contact.whatsapp;
+---
+
+<div class="product-info-section">
+  <!-- Brand (if available) -->
+  {product.subcategory && (
+    <p class="text-xs tracking-wider uppercase text-foreground/50 font-body mb-2">
+      {product.subcategory}
+    </p>
+  )}
+
+  <!-- Product Name -->
+  <h1 class="text-3xl md:text-4xl font-heading mb-4">{product.name}</h1>
+
+  <!-- Rating & Reviews -->
+  {product.rating > 0 && (
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <svg
+            class={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-accent' : 'text-foreground/20'}`}
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        ))}
+      </div>
+      <span class="text-sm text-foreground/60 font-body">
+        {product.rating} ({product.reviewCount} reviews)
+      </span>
+    </div>
+  )}
+
+  <!-- Price -->
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-2">
+      <p class="text-3xl font-body font-medium">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}</p>
+      {product.compareAtPrice && (
+        <>
+          <p class="text-xl text-muted font-body line-through">
+            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.compareAtPrice)}
+          </p>
+          <span class="px-2 py-1 text-sm text-accent font-body bg-accent/10">
+            Save {Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)}%
+          </span>
+        </>
+      )}
+    </div>
+    {product.inStock && product.stockCount && product.stockCount < 10 && (
+      <p class="text-sm text-orange-600 font-body">Only {product.stockCount} left in stock</p>
+    )}
+    {!product.inStock && (
+      <p class="text-sm text-red-600 font-body">Out of stock</p>
+    )}
+  </div>
+
+  <!-- Color Selector -->
+  {product.colors.length > 0 && (
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <label class="text-sm tracking-wider uppercase font-body">Color</label>
+        <span id="selected-color" class="text-sm text-foreground/60 font-body">{product.colors[0].name}</span>
+      </div>
+      <div class="flex gap-2">
+        {product.colors.map((color, index) => (
+          <button
+            class="color-option w-10 h-10 rounded-full border-2 border-transparent hover:border-foreground/30 transition-all focus:outline-none focus:ring-2 focus:ring-foreground"
+            data-color={color.name}
+            data-index={index}
+            style={`background-color: ${color.hex}`}
+            aria-label={`Select ${color.name}`}
+          >
+            <span class="sr-only">{color.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Size Selector -->
+  {product.sizes.length > 0 && (
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <label class="text-sm tracking-wider uppercase font-body">Size</label>
+        <button
+          id="size-guide-btn"
+          class="text-sm text-foreground/60 font-body underline hover:text-foreground"
+        >
+          Size Guide
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {product.sizes.map((size, index) => (
+          <button
+            class={`size-option px-5 py-3 text-sm tracking-wider uppercase font-body border transition-colors ${
+              size.available
+                ? 'border-border hover:border-foreground hover:bg-foreground hover:text-background'
+                : 'border-border/30 text-foreground/30 cursor-not-allowed'
+            }`}
+            data-size={size.name}
+            data-available={size.available}
+            disabled={!size.available}
+          >
+            {size.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Quantity Selector -->
+  <div class="mb-8">
+    <label class="text-sm tracking-wider uppercase font-body block mb-3">Quantity</label>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center border border-border">
+        <button
+          id="qty-decrease"
+          class="px-4 py-3 hover:bg-foreground/5 transition-colors"
+          aria-label="Decrease quantity"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+          </svg>
+        </button>
+        <input
+          type="number"
+          id="quantity"
+          value="1"
+          min="1"
+          max={product.stockCount || 99}
+          class="w-16 px-4 py-3 text-center border-x border-border focus:outline-none font-body"
+          readonly
+        />
+        <button
+          id="qty-increase"
+          class="px-4 py-3 hover:bg-foreground/5 transition-colors"
+          aria-label="Increase quantity"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
+      {product.stockCount && product.stockCount < 100 && (
+        <span class="text-sm text-foreground/60 font-body">Max: {product.stockCount}</span>
+      )}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="space-y-3 mb-8">
+    <button
+      id="add-to-cart-btn"
+      data-product-id={product.id}
+      data-product-slug={product.slug}
+      data-product-name={product.name}
+      data-product-price={product.price}
+      data-product-thumbnail={product.thumbnail}
+      data-product-in-stock={String(product.inStock)}
+      data-product-stock-count={product.stockCount}
+      class="w-full py-4 bg-foreground text-background text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={!product.inStock}
+    >
+      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+    </button>
+    <button
+      id="buy-now-btn"
+      class="w-full py-4 border-2 border-foreground text-foreground text-sm tracking-wider uppercase font-body hover:bg-foreground hover:text-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={!product.inStock}
+    >
+      Buy Now
+    </button>
+
+    {/* PRD §38 — WhatsApp demoted to secondary CTA */}
+    <a
+      id="whatsapp-btn"
+      data-product-name={product.name}
+      data-product-price={product.price}
+      href={generateWhatsAppUrl(
+        generateProductInquiryMessage({ name: product.name, price: product.price }),
+        whatsappNumber
+      )}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center justify-center gap-2 w-full py-4 border border-border text-foreground/70 text-sm tracking-wider uppercase font-body hover:bg-foreground/5 hover:text-foreground transition-colors"
+    >
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 016.987 2.896 9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.548 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      Order via WhatsApp
+    </a>
+  </div>
+
+  <!-- Wishlist -->
+  <button
+    id="wishlist-toggle"
+    class="flex items-center gap-2 text-sm font-body text-foreground/60 hover:text-foreground transition-colors mb-8"
+    data-product-id={product.id}
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+    <span id="wishlist-text">Add to Wishlist</span>
+  </button>
+
+  <!-- Short Description -->
+  {product.shortDescription && (
+    <p class="text-foreground/70 font-body leading-relaxed mb-8">
+      {product.shortDescription}
+    </p>
+  )}
+
+  <!-- Trust Badges -->
+  <div class="border-t border-border pt-6 space-y-3">
+    <div class="flex items-center gap-3 text-sm font-body text-foreground/70">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+      </svg>
+      <span>Free shipping on orders over Rp500K</span>
+    </div>
+    <div class="flex items-center gap-3 text-sm font-body text-foreground/70">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+      </svg>
+      <span>Easy returns within 7 days</span>
+    </div>
+    <div class="flex items-center gap-3 text-sm font-body text-foreground/70">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      <span>Secure payment</span>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ whatsappNumber }}>
+  // Quantity controls
+  const qtyInput = document.getElementById('quantity') as HTMLInputElement;
+  const qtyDecrease = document.getElementById('qty-decrease');
+  const qtyIncrease = document.getElementById('qty-increase');
+
+  qtyDecrease?.addEventListener('click', () => {
+    const current = parseInt(qtyInput.value);
+    if (current > 1) {
+      qtyInput.value = String(current - 1);
+    }
+  });
+
+  qtyIncrease?.addEventListener('click', () => {
+    const current = parseInt(qtyInput.value);
+    const max = parseInt(qtyInput.max);
+    if (current < max) {
+      qtyInput.value = String(current + 1);
+    }
+  });
+
+  // Color selection
+  const colorOptions = document.querySelectorAll('.color-option');
+  const selectedColorText = document.getElementById('selected-color');
+  
+  colorOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      colorOptions.forEach((opt) => opt.classList.remove('border-foreground', 'ring-2'));
+      option.classList.add('border-foreground');
+      
+      const colorName = (option as HTMLElement).dataset.color;
+      if (selectedColorText && colorName) {
+        selectedColorText.textContent = colorName;
+      }
+    });
+  });
+
+  // Size selection
+  const sizeOptions = document.querySelectorAll('.size-option');
+  
+  sizeOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      if ((option as HTMLButtonElement).disabled) return;
+      
+      sizeOptions.forEach((opt) => opt.classList.remove('bg-foreground', 'text-background', 'border-foreground'));
+      option.classList.add('bg-foreground', 'text-background', 'border-foreground');
+    });
+  });
+
+  // Wishlist toggle
+  const wishlistBtn = document.getElementById('wishlist-toggle');
+  const wishlistText = document.getElementById('wishlist-text');
+  const productId = wishlistBtn?.dataset.productId;
+
+  function updateWishlistState() {
+    try {
+      const wishlist = JSON.parse(localStorage.getItem('roquace-wishlist') || '[]');
+      const isInWishlist = wishlist.includes(productId);
+      
+      const svg = wishlistBtn?.querySelector('svg');
+      if (isInWishlist) {
+        svg?.setAttribute('fill', 'currentColor');
+        if (wishlistText) wishlistText.textContent = 'Remove from Wishlist';
+      } else {
+        svg?.setAttribute('fill', 'none');
+        if (wishlistText) wishlistText.textContent = 'Add to Wishlist';
+      }
+    } catch (e) {
+      // Handle error
+    }
+  }
+
+  wishlistBtn?.addEventListener('click', () => {
+    try {
+      let wishlist = JSON.parse(localStorage.getItem('roquace-wishlist') || '[]');
+      const isInWishlist = wishlist.includes(productId);
+      
+      if (isInWishlist) {
+        wishlist = wishlist.filter((id: string) => id !== productId);
+      } else {
+        wishlist.push(productId);
+      }
+      
+      localStorage.setItem('roquace-wishlist', JSON.stringify(wishlist));
+      updateWishlistState();
+      window.dispatchEvent(new CustomEvent('wishlist-updated'));
+    } catch (e) {
+      // Handle error
+    }
+  });
+
+  // Initialize wishlist state
+  updateWishlistState();
+
+  // Add to cart
+  const addToCartBtn = document.getElementById('add-to-cart-btn') as HTMLButtonElement | null;
+  const CART_KEY = 'roquace_cart';
+
+  interface CartItem {
+    productId: string;
+    product: {
+      id: string;
+      name: string;
+      slug: string;
+      price: number;
+      thumbnail: string;
+      inStock: boolean;
+      stockCount?: number;
+    };
+    color: string;
+    size: string;
+    quantity: number;
+    price: number;
+  }
+
+  function readCart(): CartItem[] {
+    try {
+      const raw = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function writeCart(cart: CartItem[]): void {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }
+
+  // Items sharing the same product, colour and size are merged into one line.
+  function addItemToCart(item: CartItem): CartItem[] {
+    const cart = readCart();
+    const existing = cart.findIndex(
+      (line) => line.productId === item.productId && line.color === item.color && line.size === item.size
+    );
+
+    if (existing > -1) {
+      cart[existing].quantity += item.quantity;
+    } else {
+      cart.push(item);
+    }
+
+    writeCart(cart);
+    return cart;
+  }
+
+  addToCartBtn?.addEventListener('click', () => {
+    const colorOption = document.querySelector('.color-option.border-foreground');
+    const sizeOption = document.querySelector('.size-option.bg-foreground');
+    const selectedColor = colorOption?.getAttribute('data-color') ?? '';
+    const selectedSize = sizeOption?.getAttribute('data-size') ?? '';
+    const quantity = parseInt(qtyInput?.value ?? '1', 10) || 1;
+    const hasSizes = document.querySelectorAll('.size-option').length > 0;
+
+    if (hasSizes && !selectedSize) {
+      // Inline notice instead of a blocking alert (PRD §48).
+      showAddToCartNotice('Please select a size first.', true);
+      return;
+    }
+
+    const dataset = addToCartBtn.dataset;
+    if (dataset.productInStock !== 'true') {
+      showAddToCartNotice('This item is out of stock.', true);
+      return;
+    }
+
+    const stockCount = Number(dataset.productStockCount || 0);
+    if (stockCount > 0 && quantity > stockCount) {
+      showAddToCartNotice(`Only ${stockCount} left in stock.`, true);
+      return;
+    }
+
+    // Show loading state
+    const originalText = addToCartBtn.textContent || 'Add to Cart';
+    addToCartBtn.textContent = 'Adding...';
+    addToCartBtn.disabled = true;
+
+    // Simulate brief loading (in real app, would wait for API)
+    setTimeout(() => {
+      addItemToCart({
+        productId: dataset.productId ?? '',
+        product: {
+          id: dataset.productId ?? '',
+          slug: dataset.productSlug ?? '',
+          name: dataset.productName ?? '',
+          thumbnail: dataset.productThumbnail ?? '',
+          price: Number(dataset.productPrice || 0),
+          inStock: true,
+          stockCount: Number(dataset.productStockCount || 0),
+        },
+        color: selectedColor,
+        size: selectedSize,
+        quantity,
+        price: Number(dataset.productPrice || 0),
+      });
+
+      showAddToCartNotice(`Added to cart${selectedSize ? ` — ${selectedSize}` : ''}.`);
+
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+
+      // Reset button
+      addToCartBtn.textContent = originalText;
+      addToCartBtn.disabled = false;
+
+      // Open the drawer so the result of the action is visible.
+      (window as unknown as { openCartDrawer?: () => void }).openCartDrawer?.();
+    }, 300);
+  });
+
+  function showAddToCartNotice(message: string, isError = false): void {
+    let notice = document.getElementById('add-to-cart-notice');
+
+    if (!notice) {
+      notice = document.createElement('p');
+      notice.id = 'add-to-cart-notice';
+      notice.setAttribute('role', 'status');
+      notice.className = 'text-sm font-body text-center';
+      addToCartBtn?.parentElement?.prepend(notice);
+    }
+
+    notice.textContent = message;
+    notice.classList.toggle('text-red-500', isError);
+    notice.classList.toggle('text-accent', !isError);
+
+    window.setTimeout(() => {
+      if (notice) notice.textContent = '';
+    }, 3000);
+  }
+
+  // Buy now
+  const buyNowBtn = document.getElementById('buy-now-btn');
+
+  buyNowBtn?.addEventListener('click', () => {
+    // Reuse the same path so the cart line is always written, then go to checkout.
+    addToCartBtn?.click();
+    window.setTimeout(() => {
+      window.location.href = '/checkout';
+    }, 400);
+  });
+
+  // Initialize first color and size
+  colorOptions[0]?.classList.add('border-foreground');
+
+  const firstAvailableSize = Array.from(sizeOptions).find(
+    (opt) => !(opt as HTMLButtonElement).disabled
+  );
+  firstAvailableSize?.classList.add('bg-foreground', 'text-background', 'border-foreground');
+
+  // WhatsApp deep link keeps the message in sync with the current selection (PRD §38)
+  const whatsappBtn = document.getElementById('whatsapp-btn');
+  const productName = whatsappBtn?.dataset.productName;
+  const productPrice = Number(whatsappBtn?.dataset.productPrice);
+
+  function formatIDR(value: number): string {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(value);
+  }
+
+  function syncWhatsAppLink(): void {
+    if (!whatsappBtn) return;
+
+    const color = document.querySelector('.color-option.border-foreground')?.getAttribute('data-color');
+    const size = document.querySelector('.size-option.bg-foreground')?.getAttribute('data-size');
+    const quantity = qtyInput?.value ?? '1';
+
+    let message = `Hi, I am interested in:\n\nProduct: ${productName}\n`;
+    if (color) message += `Color: ${color}\n`;
+    if (size) message += `Size: ${size}\n`;
+    message += `Quantity: ${quantity}\n`;
+    message += `Price: ${formatIDR(productPrice)}\n\n`;
+    message += `Is this product available?`;
+
+    whatsappBtn.setAttribute(
+      'href',
+      `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+    );
+  }
+
+  colorOptions.forEach((option) => option.addEventListener('click', syncWhatsAppLink));
+  sizeOptions.forEach((option) => option.addEventListener('click', syncWhatsAppLink));
+  qtyDecrease?.addEventListener('click', syncWhatsAppLink);
+  qtyIncrease?.addEventListener('click', syncWhatsAppLink);
+
+  syncWhatsAppLink();
+</script>

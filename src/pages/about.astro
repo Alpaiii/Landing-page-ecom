@@ -11,7 +11,7 @@ import { siteConfig } from '../config/site';
   <AnnouncementBar />
   <Navbar />
 
-  <main class="pt-32 md:pt-36">
+  <main id="main-content" class="pt-32 md:pt-36">
     <!-- Hero -->
     <section class="section-padding">
       <div class="container-custom">
@@ -19,8 +19,8 @@ import { siteConfig } from '../config/site';
           <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4">About Us</p>
           <h1 class="heading-xl mb-6">The Story of {siteConfig.name}</h1>
           <p class="text-lg text-foreground/70 font-body">
-            Born from a passion for contemporary fashion, {siteConfig.name} represents the modern individual 
-            who values both style and substance.
+            Born from a passion for sustainable design, {siteConfig.name} creates canvas bags for the modern adventurer 
+            who values both function and form.
           </p>
         </div>
       </div>
@@ -41,16 +41,16 @@ import { siteConfig } from '../config/site';
             <h2 class="heading-lg mb-6">Our Mission</h2>
             <div class="space-y-4 text-foreground/70 font-body">
               <p>
-                We believe fashion should be accessible, sustainable, and authentic. Our collections 
-                are curated to empower you to express your unique identity.
+                We believe great bags should be sustainable, functional, and timeless. Our canvas bags 
+                are designed to accompany you through life's adventures, big and small.
               </p>
               <p>
-                Every piece is thoughtfully designed to seamlessly blend into your everyday life, 
-                offering comfort without compromising on style.
+                Every bag is crafted with attention to detail, using durable canvas that gets better with age. 
+                We focus on quality over quantity, creating pieces that last.
               </p>
               <p>
-                From casual streetwear to elegant pieces, we create clothing that speaks volumes 
-                without saying a word.
+                From daily commutes to weekend getaways, our bags carry more than just your belongings—
+                they carry your story.
               </p>
             </div>
           </div>
@@ -68,26 +68,26 @@ import { siteConfig } from '../config/site';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 class="font-body font-medium mb-2">Quality Material</h3>
-            <p class="text-sm text-foreground/60 font-body">Premium fabrics sourced for comfort and durability.</p>
+            <h3 class="font-body font-medium mb-2">Durable Canvas</h3>
+            <p class="text-sm text-foreground/60 font-body">Heavy-duty materials built to withstand daily use.</p>
           </div>
           <div>
             <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 class="font-body font-medium mb-2">Local Crafted</h3>
-            <p class="text-sm text-foreground/60 font-body">Made with care by local artisans.</p>
+            <h3 class="font-body font-medium mb-2">Eco-Friendly</h3>
+            <p class="text-sm text-foreground/60 font-body">Sustainable materials with minimal environmental impact.</p>
           </div>
           <div>
             <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 class="font-body font-medium mb-2">Timeless Design</h3>
-            <p class="text-sm text-foreground/60 font-body">Styles that transcend trends.</p>
+            <h3 class="font-body font-medium mb-2">Timeless Style</h3>
+            <p class="text-sm text-foreground/60 font-body">Classic designs that never go out of fashion.</p>
           </div>
           <div>
             <div class="w-12 h-12 mx-auto mb-4 border border-border flex items-center justify-center">
@@ -95,8 +95,8 @@ import { siteConfig } from '../config/site';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <h3 class="font-body font-medium mb-2">Made for Everyday</h3>
-            <p class="text-sm text-foreground/60 font-body">Comfortable pieces for daily wear.</p>
+            <h3 class="font-body font-medium mb-2">Versatile Carry</h3>
+            <p class="text-sm text-foreground/60 font-body">Designed for every occasion and adventure.</p>
           </div>
         </div>
       </div>

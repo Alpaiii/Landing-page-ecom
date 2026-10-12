@@ -1,0 +1,331 @@
+---
+// Search overlay component
+---
+
+<div id="search-overlay" class="fixed inset-0 z-50 hidden">
+  <!-- Backdrop -->
+  <div id="search-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+  
+  <!-- Search Panel -->
+  <div class="absolute inset-x-0 top-0 bg-background shadow-lg">
+    <div class="container-custom py-8">
+      <!-- Search Header -->
+      <div class="flex items-center gap-4 mb-8">
+        <div class="flex-1 relative">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search products..."
+            class="w-full pl-12 pr-4 py-4 text-lg font-body border-b-2 border-border focus:border-foreground focus:outline-none bg-transparent"
+            autocomplete="off"
+          />
+        </div>
+        <button
+          id="close-search"
+          class="p-3 hover:bg-foreground/5 transition-colors"
+          aria-label="Close search"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Search Content -->
+      <div id="search-content">
+        <!-- Default State: Trending + Popular -->
+        <div id="search-default" class="space-y-8">
+          <!-- Trending Searches -->
+          <div>
+            <h3 class="text-sm tracking-wider uppercase font-body text-foreground/60 mb-4">Trending Searches</h3>
+            <div class="flex flex-wrap gap-2">
+              <a href="/shop?search=oversized+tee" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Oversized Tee
+              </a>
+              <a href="/shop?search=cargo+pants" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Cargo Pants
+              </a>
+              <a href="/shop?search=hoodie" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Hoodie
+              </a>
+              <a href="/shop?search=linen+shirt" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Linen Shirt
+              </a>
+              <a href="/shop?search=wide+leg" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                Wide Leg
+              </a>
+            </div>
+          </div>
+
+          <!-- Popular Products -->
+          <div>
+            <h3 class="text-sm tracking-wider uppercase font-body text-foreground/60 mb-4">Popular Products</h3>
+            <div id="popular-products" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <!-- Populated by script -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="search-results" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <p id="results-count" class="text-sm text-foreground/60 font-body"></p>
+            <a id="view-all-link" href="/shop" class="text-sm text-foreground font-body underline hover:no-underline">
+              View all results
+            </a>
+          </div>
+          <div id="results-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Populated by script -->
+          </div>
+        </div>
+
+        <!-- No Results -->
+        <div id="no-results" class="hidden text-center py-12">
+          <svg class="w-16 h-16 mx-auto mb-4 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <h3 class="text-lg font-heading mb-2">No results found</h3>
+          <p id="no-results-query" class="text-foreground/60 font-body mb-4"></p>
+          <p class="text-sm text-foreground/60 font-body">Try searching with different keywords</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #search-overlay {
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .search-result-card {
+    display: block;
+    transition: transform 0.2s ease;
+  }
+
+  .search-result-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .search-result-card img {
+    aspect-ratio: 4/5;
+    object-fit: cover;
+  }
+</style>
+
+<script>
+  import { trapFocus } from '../utils/focusTrap';
+
+  const searchOverlay = document.getElementById('search-overlay');
+  const searchBackdrop = document.getElementById('search-backdrop');
+  const closeSearchBtn = document.getElementById('close-search');
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  const searchDefault = document.getElementById('search-default');
+  const searchResults = document.getElementById('search-results');
+  const noResults = document.getElementById('no-results');
+  const resultsGrid = document.getElementById('results-grid');
+  const resultsCount = document.getElementById('results-count');
+  const viewAllLink = document.getElementById('view-all-link');
+  const noResultsQuery = document.getElementById('no-results-query');
+  const popularProducts = document.getElementById('popular-products');
+
+  let searchTimeout: number;
+  let releaseFocusTrap: (() => void) | null = null;
+  const API_URL = 'http://localhost:4000';
+
+  function formatIDR(value: number): string {
+    return `Rp${value.toLocaleString('id-ID')}`;
+  }
+
+  function escapeHTML(value: unknown): string {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => {
+      switch (char) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '"': return '&quot;';
+        default: return '&#39;';
+      }
+    });
+  }
+
+  // Open search
+  function openSearch() {
+    if (!searchOverlay) return;
+    searchOverlay.classList.remove('hidden');
+    searchOverlay.setAttribute('role', 'dialog');
+    searchOverlay.setAttribute('aria-modal', 'true');
+    searchOverlay.setAttribute('aria-label', 'Search');
+    document.body.style.overflow = 'hidden';
+    loadPopularProducts();
+    
+    releaseFocusTrap?.();
+    if (searchOverlay) {
+      releaseFocusTrap = trapFocus(searchOverlay, { onEscape: closeSearch });
+    }
+    searchInput?.focus();
+  }
+
+  // Close search
+  function closeSearch() {
+    releaseFocusTrap?.();
+    releaseFocusTrap = null;
+    
+    searchOverlay?.classList.add('hidden');
+    document.body.style.overflow = '';
+    searchInput!.value = '';
+    showDefault();
+  }
+
+  // Show default state
+  function showDefault() {
+    searchDefault?.classList.remove('hidden');
+    searchResults?.classList.add('hidden');
+    noResults?.classList.add('hidden');
+  }
+
+  // Load popular products from API
+  async function loadPopularProducts() {
+    if (!popularProducts) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/products?is_featured=true&limit=4`);
+      if (!response.ok) return;
+
+      const result = await response.json();
+      const products = result.data || [];
+
+      popularProducts.innerHTML = products
+        .map(
+          (product: any) => `
+          <a href="/products/${escapeHTML(product.slug)}" class="search-result-card">
+            <img src="${escapeHTML(product.images?.[0] || '/images/placeholder.jpg')}" alt="${escapeHTML(product.name)}" class="w-full mb-2" loading="lazy" />
+            <h4 class="text-sm font-body mb-1 line-clamp-2">${escapeHTML(product.name)}</h4>
+            <p class="text-sm text-foreground/60 font-body">${formatIDR(product.price)}</p>
+          </a>`
+        )
+        .join('');
+    } catch (e) {
+      console.error('Failed to load popular products:', e);
+    }
+  }
+
+  // Search products via API
+  async function searchProducts(query: string) {
+    if (!query.trim()) {
+      showDefault();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/search/products?q=${encodeURIComponent(query)}&limit=8`);
+      
+      if (!response.ok) {
+        showNoResults(query);
+        return;
+      }
+
+      const result = await response.json();
+      const products = result.data || [];
+
+      if (products.length === 0) {
+        showNoResults(query);
+        return;
+      }
+
+      showResults(products, query, result.pagination?.total || 0);
+    } catch (e) {
+      console.error('Search error:', e);
+      showNoResults(query);
+    }
+  }
+
+  // Show results
+  function showResults(products: any[], query: string, total: number) {
+    searchDefault?.classList.add('hidden');
+    noResults?.classList.add('hidden');
+    searchResults?.classList.remove('hidden');
+
+    if (resultsCount) {
+      resultsCount.textContent = `Found ${total} product${total !== 1 ? 's' : ''} (showing ${products.length})`;
+    }
+
+    if (viewAllLink) {
+      viewAllLink.href = `/shop?search=${encodeURIComponent(query)}`;
+    }
+
+    if (resultsGrid) {
+      resultsGrid.innerHTML = products
+        .map(
+          (product: any) => `
+          <a href="/products/${escapeHTML(product.slug)}" class="search-result-card">
+            <div class="relative">
+              <img src="${escapeHTML(product.images?.[0] || '/images/placeholder.jpg')}" alt="${escapeHTML(product.name)}" class="w-full mb-2" loading="lazy" />
+              ${
+                product.is_new
+                  ? `<span class="absolute top-2 left-2 bg-foreground text-background text-xs px-2 py-1 uppercase tracking-wider font-body">New</span>`
+                  : product.is_featured
+                  ? `<span class="absolute top-2 left-2 bg-accent text-white text-xs px-2 py-1 uppercase tracking-wider font-body">Popular</span>`
+                  : ''
+              }
+            </div>
+            <h4 class="text-sm font-body mb-1 line-clamp-2">${escapeHTML(product.name)}</h4>
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-body">${formatIDR(product.price)}</p>
+              ${
+                product.compare_price
+                  ? `<p class="text-xs text-foreground/40 line-through">${formatIDR(product.compare_price)}</p>`
+                  : ''
+              }
+            </div>
+          </a>`
+        )
+        .join('');
+    }
+  }
+
+  // Show no results
+  function showNoResults(query: string) {
+    searchDefault?.classList.add('hidden');
+    searchResults?.classList.add('hidden');
+    noResults?.classList.remove('hidden');
+
+    if (noResultsQuery) {
+      noResultsQuery.textContent = `No results for "${query}"`;
+    }
+  }
+
+  // Event listeners
+  closeSearchBtn?.addEventListener('click', closeSearch);
+  searchBackdrop?.addEventListener('click', closeSearch);
+
+  searchInput?.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const query = (e.target as HTMLInputElement).value;
+    searchTimeout = window.setTimeout(() => {
+      searchProducts(query);
+    }, 300);
+  });
+
+  // ESC key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !searchOverlay?.classList.contains('hidden')) {
+      closeSearch();
+    }
+  });
+
+  // Exposed for the navbar search button and the mobile bottom nav.
+  (window as unknown as { openSearch: () => void }).openSearch = openSearch;
+</script>

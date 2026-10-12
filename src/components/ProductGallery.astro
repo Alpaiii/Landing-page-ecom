@@ -1,0 +1,263 @@
+---
+interface Props {
+  images: Array<{ src: string; alt: string }>;
+  productName: string;
+}
+
+const { images, productName } = Astro.props;
+---
+
+<div class="product-gallery">
+  <!-- Main Image -->
+  <div class="main-image-container relative aspect-[4/5] bg-foreground/5 overflow-hidden mb-4">
+    <img
+      id="main-image"
+      src={images[0].src}
+      alt={images[0].alt}
+      class="w-full h-full object-cover"
+    />
+    
+    <!-- Zoom Icon -->
+    <button
+      id="zoom-btn"
+      class="absolute top-4 right-4 w-10 h-10 bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
+      aria-label="Zoom image"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+      </svg>
+    </button>
+
+    <!-- Navigation Arrows (if multiple images) -->
+    {images.length > 1 && (
+      <>
+        <button
+          id="prev-btn"
+          class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-foreground hover:text-background transition-all opacity-0 group-hover:opacity-100"
+          aria-label="Previous image"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button
+          id="next-btn"
+          class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-foreground hover:text-background transition-all opacity-0 group-hover:opacity-100"
+          aria-label="Next image"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </>
+    )}
+
+    <!-- Image Counter -->
+    {images.length > 1 && (
+      <div class="absolute bottom-4 right-4 px-3 py-1.5 bg-background/90 backdrop-blur-sm text-xs font-body">
+        <span id="current-index">1</span> / {images.length}
+      </div>
+    )}
+  </div>
+
+  <!-- Thumbnail Gallery -->
+  {images.length > 1 && (
+    <div class="thumbnail-gallery grid grid-cols-4 md:grid-cols-6 gap-2">
+      {images.map((image, index) => (
+        <button
+          class="thumbnail aspect-[4/5] overflow-hidden border-2 border-transparent hover:border-foreground transition-colors"
+          data-index={index}
+          aria-label={`View image ${index + 1}`}
+        >
+          <img
+            src={image.src}
+            alt={image.alt}
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+
+<!-- Fullscreen Modal -->
+<div id="fullscreen-modal" class="fixed inset-0 z-[100] bg-black hidden">
+  <button
+    id="close-fullscreen"
+    class="absolute top-4 right-4 z-10 w-12 h-12 bg-white/10 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+    aria-label="Close fullscreen"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+
+  <div class="absolute inset-0 flex items-center justify-center p-4 md:p-8">
+    <img
+      id="fullscreen-image"
+      src={images[0].src}
+      alt={images[0].alt}
+      class="max-w-full max-h-full object-contain"
+    />
+  </div>
+
+  <!-- Navigation in Fullscreen -->
+  {images.length > 1 && (
+    <>
+      <button
+        id="fullscreen-prev"
+        class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+        aria-label="Previous image"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        id="fullscreen-next"
+        class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+        aria-label="Next image"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </>
+  )}
+</div>
+
+<style>
+  .thumbnail.active {
+    border-color: var(--color-foreground);
+  }
+
+  .main-image-container:hover #prev-btn,
+  .main-image-container:hover #next-btn {
+    opacity: 1;
+  }
+
+  #fullscreen-modal {
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+
+<script define:vars={{ images }}>
+  let currentIndex = 0;
+
+  const mainImage = document.getElementById('main-image');
+  const fullscreenModal = document.getElementById('fullscreen-modal');
+  const fullscreenImage = document.getElementById('fullscreen-image');
+  const currentIndexEl = document.getElementById('current-index');
+  const thumbnails = document.querySelectorAll('.thumbnail');
+  const zoomBtn = document.getElementById('zoom-btn');
+  const closeFullscreen = document.getElementById('close-fullscreen');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const fullscreenPrev = document.getElementById('fullscreen-prev');
+  const fullscreenNext = document.getElementById('fullscreen-next');
+
+  function updateImage(index) {
+    if (index < 0 || index >= images.length) return;
+    
+    currentIndex = index;
+    const image = images[index];
+
+    // Update main image
+    if (mainImage) {
+      mainImage.src = image.src;
+      mainImage.alt = image.alt;
+    }
+
+    // Update fullscreen image
+    if (fullscreenImage) {
+      fullscreenImage.src = image.src;
+      fullscreenImage.alt = image.alt;
+    }
+
+    // Update counter
+    if (currentIndexEl) {
+      currentIndexEl.textContent = String(index + 1);
+    }
+
+    // Update active thumbnail
+    thumbnails.forEach((thumb, i) => {
+      thumb.classList.toggle('active', i === index);
+    });
+  }
+
+  function openFullscreen() {
+    fullscreenModal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFullscreenView() {
+    fullscreenModal?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function navigatePrev() {
+    updateImage((currentIndex - 1 + images.length) % images.length);
+  }
+
+  function navigateNext() {
+    updateImage((currentIndex + 1) % images.length);
+  }
+
+  // Thumbnail clicks
+  thumbnails.forEach((thumb, index) => {
+    thumb.addEventListener('click', () => updateImage(index));
+  });
+
+  // Zoom button
+  zoomBtn?.addEventListener('click', openFullscreen);
+
+  // Close fullscreen
+  closeFullscreen?.addEventListener('click', closeFullscreenView);
+
+  // Navigation buttons
+  prevBtn?.addEventListener('click', navigatePrev);
+  nextBtn?.addEventListener('click', navigateNext);
+  fullscreenPrev?.addEventListener('click', navigatePrev);
+  fullscreenNext?.addEventListener('click', navigateNext);
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!fullscreenModal?.classList.contains('hidden')) {
+      if (e.key === 'Escape') closeFullscreenView();
+      if (e.key === 'ArrowLeft') navigatePrev();
+      if (e.key === 'ArrowRight') navigateNext();
+    }
+  });
+
+  // Swipe support for mobile
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  mainImage?.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+
+  mainImage?.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  });
+
+  function handleSwipe() {
+    const swipeThreshold = 50;
+    if (touchEndX < touchStartX - swipeThreshold) {
+      navigateNext();
+    }
+    if (touchEndX > touchStartX + swipeThreshold) {
+      navigatePrev();
+    }
+  }
+
+  // Initialize
+  updateImage(0);
+</script>

@@ -1,0 +1,102 @@
+---
+import { products } from '../data/products';
+
+interface Props {
+  currentSlug?: string;
+}
+
+const { currentSlug: EXCLUDED_SLUG } = Astro.props;
+const MAX_ITEMS = 4;
+
+// The list is assembled server-side from the full catalogue, then the client
+// script reorders it to match the user's actual viewing history.
+const candidates = products.filter((product) => product.slug !== EXCLUDED_SLUG);
+---
+
+<section id="recently-viewed" class="section-padding pt-0 hidden" aria-labelledby="recently-viewed-heading">
+  <div class="container-custom">
+    <div class="border-t border-border pt-16">
+      <h2 id="recently-viewed-heading" class="text-2xl md:text-3xl font-heading mb-10">
+        Recently Viewed
+      </h2>
+
+      <div id="recently-viewed-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        {candidates.slice(0, MAX_ITEMS).map((product) => (
+          <div data-rv-slug={product.slug} hidden>
+            <a href={`/products/${product.slug}`} class="block relative aspect-[4/5] overflow-hidden bg-foreground/5 mb-4">
+              <img
+                src={product.thumbnail}
+                alt={product.name}
+                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                loading="lazy"
+              />
+              {product.badge && (
+                <span class="absolute top-4 left-4 bg-foreground text-background text-xs px-3 py-1.5 tracking-wider uppercase font-body">
+                  {product.badge}
+                </span>
+              )}
+            </a>
+            <p class="text-sm font-body mb-1 line-clamp-1">{product.name}</p>
+            <p class="text-sm font-body text-foreground/60">
+              {new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+              }).format(product.price)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const STORAGE_KEY = 'roquace-recently-viewed';
+  const MAX_ITEMS = 4;
+
+  const section = document.getElementById('recently-viewed');
+  const grid = document.getElementById('recently-viewed-grid');
+
+  function readHistory(): string[] {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(raw) ? raw.filter((id) => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function render(): void {
+    if (!section || !grid) return;
+
+    const currentSlug = window.location.pathname.split('/').filter(Boolean).pop();
+    const history = readHistory().filter((slug) => slug !== currentSlug).slice(0, MAX_ITEMS);
+
+    const slots = Array.from(grid.querySelectorAll<HTMLElement>('[data-rv-slug]'));
+
+    if (history.length === 0) {
+      section.classList.add('hidden');
+      return;
+    }
+
+    slots.forEach((slot) => {
+      const slug = slot.dataset.rvSlug ?? '';
+      if (history.includes(slug)) {
+        slot.hidden = false;
+        // Move into viewing order (most recent first).
+        const targetIndex = history.indexOf(slug);
+        if (targetIndex >= 0 && grid.children[targetIndex] !== slot) {
+          grid.insertBefore(slot, grid.children[targetIndex] ?? null);
+        }
+      } else {
+        slot.hidden = true;
+      }
+    });
+
+    section.classList.remove('hidden');
+  }
+
+  render();
+  window.addEventListener('storage', render);
+</script>

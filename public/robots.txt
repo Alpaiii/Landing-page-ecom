@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nova-fashion.vercel.app/sitemap.xml
+# Account, checkout and order routes are per-user and must never be indexed.
+Disallow: /account
+Disallow: /account/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /search
+
+Sitemap: https://roquace.com/sitemap.xml

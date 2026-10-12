@@ -1,0 +1,43 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import CollectionCard from '../components/CollectionCard.astro';
+import Footer from '../components/Footer.astro';
+import { getFeaturedCollections } from '../data/collections';
+
+const title = 'Collections';
+const description = 'Explore our featured collections. Curated edits of the season, from new arrivals to timeless essentials.';
+const featuredCollections = getFeaturedCollections();
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom">
+        <div class="text-center mb-12 md:mb-16">
+          <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4 font-body">Collections</p>
+          <h1 class="heading-xl mb-4">Featured Collections</h1>
+          <p class="text-foreground/60 font-body max-w-xl mx-auto">{description}</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          {featuredCollections.map((collection) => (
+            <CollectionCard
+              name={collection.name}
+              description={collection.shortDescription || collection.description}
+              image={collection.image}
+              slug={collection.slug}
+              featured={collection.featured}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

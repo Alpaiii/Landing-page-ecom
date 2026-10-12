@@ -1,8 +1,8 @@
 export const siteConfig = {
   // Brand Information
   name: "Roquace",
-  tagline: "Wear Your Identity.",
-  description: "Contemporary fashion designed for everyday expression. Premium quality clothing for modern brands.",
+  tagline: "Carry Your Story.",
+  description: "Premium canvas bags designed for everyday adventures. Durable, sustainable, and crafted with purpose.",
   
   // Contact
   contact: {
@@ -40,6 +40,21 @@ export const siteConfig = {
     enabled: true,
   },
 
+  // Hero Section
+  hero: {
+    eyebrow: "Canvas Collection",
+    headline: "Carry Your",
+    headlineAccent: "Adventure.",
+    subcopy: "Sustainable canvas bags crafted for life on the move.",
+    offerPills: [
+      "FREE SHIPPING ON ORDERS OVER RP500K",
+      "COD · Tukar 7 Hari",
+    ],
+    shopTheLookProductId: "classic-canvas-tote",
+    primaryCta: { href: "/shop", label: "Shop Bags" },
+    secondaryCta: { href: "/about", label: "Our Story" },
+  },
+
   // Navigation Links
   navigation: {
     main: [
@@ -51,12 +66,12 @@ export const siteConfig = {
     ],
     footer: {
       shop: [
-        { href: '/shop', label: 'All Products' },
-        { href: '/shop?category=women', label: 'Women' },
-        { href: '/shop?category=men', label: 'Men' },
-        { href: '/shop?category=accessories', label: 'Accessories' },
-        { href: '/shop?filter=new', label: 'New Arrivals' },
-        { href: '/shop?filter=bestseller', label: 'Best Sellers' },
+        { href: '/shop', label: 'All Bags' },
+        { href: '/shop/tote', label: 'Tote Bags' },
+        { href: '/shop/crossbody', label: 'Crossbody' },
+        { href: '/shop/messenger', label: 'Messenger' },
+        { href: '/shop/new-arrivals', label: 'New Arrivals' },
+        { href: '/shop?filter=Best+Seller', label: 'Best Sellers' },
       ],
       company: [
         { href: '/about', label: 'About' },
@@ -64,9 +79,8 @@ export const siteConfig = {
         { href: '/faq', label: 'FAQ' },
       ],
       support: [
-        { href: '/shipping', label: 'Shipping' },
-        { href: '/returns', label: 'Returns' },
-        { href: '/size-guide', label: 'Size Guide' },
+        { href: '/shipping-returns', label: 'Shipping & Returns' },
+        { href: '/size-guide', label: 'Bag Dimensions' },
       ],
       legal: [
         { href: '/privacy', label: 'Privacy Policy' },

@@ -9,15 +9,15 @@ export interface FAQItem {
 export const faqItems: FAQItem[] = [
   {
     id: "sizing",
-    question: "How do I choose my size?",
-    answer: "We recommend referring to our Size Guide available on each product page. Our products generally run true to size, but specific fit information is provided in each product description. If you're between sizes, we suggest sizing up for a relaxed fit or down for a fitted look.",
+    question: "How do I choose the right bag size?",
+    answer: "Check our Bag Dimensions guide for detailed measurements. Consider what you'll carry daily - mini crossbody for essentials, tote for laptop and books, or weekend bag for short trips. Product pages show capacity details for each bag.",
     category: "Sizing",
     order: 1,
   },
   {
     id: "ordering",
     question: "How can I place an order?",
-    answer: "Simply browse our products, select your preferred color and size, and add to cart. When you're ready, proceed to checkout and complete your order via WhatsApp. Our team will confirm your order and provide payment instructions within 1 business day.",
+    answer: "Simply browse our bags, select your preferred color, and add to cart. When ready, proceed to checkout and complete your order via WhatsApp. Our team will confirm your order and provide payment instructions within 1 business day.",
     category: "Ordering",
     order: 2,
   },
@@ -45,7 +45,7 @@ export const faqItems: FAQItem[] = [
   {
     id: "returns",
     question: "Can I return my order?",
-    answer: "Yes, we accept returns within 7 days of delivery for unworn, unwashed items with original tags attached. Sale items and accessories are final sale and cannot be returned. Return shipping costs are the responsibility of the customer unless the item is defective.",
+    answer: "Yes, we accept returns within 7 days of delivery for unused bags with original tags attached. Bags must be in original condition with no signs of use. Return shipping costs are the responsibility of the customer unless the item is defective.",
     category: "Returns",
     order: 6,
   },
@@ -58,8 +58,8 @@ export const faqItems: FAQItem[] = [
   },
   {
     id: "exchange",
-    question: "Can I exchange for a different size?",
-    answer: "Yes, exchanges are allowed within 7 days of delivery for unworn items with original tags. The item must be in its original condition. Please contact us via WhatsApp to arrange an exchange. You'll need to cover the shipping cost for the exchange.",
+    question: "Can I exchange for a different color or style?",
+    answer: "Yes, exchanges are allowed within 7 days of delivery for unused bags with original tags. The bag must be in its original condition. Please contact us via WhatsApp to arrange an exchange. You'll need to cover the shipping cost for the exchange.",
     category: "Returns",
     order: 8,
   },
@@ -72,8 +72,8 @@ export const faqItems: FAQItem[] = [
   },
   {
     id: "product-care",
-    question: "How should I care for my items?",
-    answer: "Care instructions vary by product. Please check the care label on each item or refer to the product description on our website. Generally, we recommend washing in cold water, avoiding bleach, and air drying when possible to maintain fabric quality.",
+    question: "How should I care for my canvas bag?",
+    answer: "Spot clean with mild soap and water for light stains. For deeper cleaning, hand wash in cold water and air dry completely. Avoid machine washing or tumble drying. Store in a cool, dry place when not in use. Canvas naturally softens with use and develops character over time.",
     category: "Product",
     order: 10,
   },

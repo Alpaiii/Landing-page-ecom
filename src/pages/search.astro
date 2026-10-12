@@ -1,0 +1,173 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import ProductCardV2 from '../components/ProductCardV2.astro';
+import Footer from '../components/Footer.astro';
+import { products } from '../data/products';
+
+// Get search query from URL
+const url = new URL(Astro.request.url);
+const searchQuery = url.searchParams.get('search') || '';
+
+// Filter products based on search query
+let filteredProducts = products;
+if (searchQuery) {
+  const lowerQuery = searchQuery.toLowerCase();
+  filteredProducts = products.filter(product => {
+    return (
+      product.name.toLowerCase().includes(lowerQuery) ||
+      product.category.toLowerCase().includes(lowerQuery) ||
+      product.subcategory?.toLowerCase().includes(lowerQuery) ||
+      product.description.toLowerCase().includes(lowerQuery) ||
+      product.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
+    );
+  });
+}
+
+const title = searchQuery ? `Search results for "${searchQuery}"` : 'Search';
+const description = searchQuery 
+  ? `Found ${filteredProducts.length} product${filteredProducts.length !== 1 ? 's' : ''} matching "${searchQuery}"`
+  : 'Search for products';
+
+const sortOptions = [
+  { value: 'relevance', label: 'Relevance' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'bestselling', label: 'Best Selling' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+];
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom">
+        <!-- Header -->
+        <div class="mb-12">
+          {searchQuery ? (
+            <>
+              <h1 class="heading-xl mb-2">Search results for "{searchQuery}"</h1>
+              <p class="text-foreground/60 font-body">
+                {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 class="heading-xl mb-2">Search Products</h1>
+              <p class="text-foreground/60 font-body">Enter a search term to find products</p>
+            </>
+          )}
+        </div>
+
+        {searchQuery && (
+          <>
+            {filteredProducts.length > 0 ? (
+              <>
+                <!-- Toolbar: Count + Sort -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                  <p id="product-count" class="text-sm text-foreground/60 font-body">
+                    Showing {filteredProducts.length} result{filteredProducts.length !== 1 ? 's' : ''}
+                  </p>
+
+                  <!-- Sort Dropdown -->
+                  <div class="relative w-full sm:w-auto">
+                    <select
+                      id="sort-select"
+                      class="appearance-none w-full sm:w-auto px-5 py-2.5 pr-10 text-sm tracking-wider uppercase font-body border border-border bg-background cursor-pointer focus:outline-none focus:border-foreground"
+                    >
+                      {sortOptions.map((option) => (
+                        <option value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <svg class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                  {filteredProducts.map((product, index) => (
+                    <ProductCardV2 product={product} index={index} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <!-- Empty State -->
+              <div class="text-center py-16">
+                <svg class="w-16 h-16 mx-auto mb-6 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <h2 class="text-2xl font-heading mb-2">No results found</h2>
+                <p class="text-foreground/60 font-body mb-6">
+                  We couldn't find any products matching "{searchQuery}"
+                </p>
+                <div class="space-y-4">
+                  <p class="text-sm text-foreground/60 font-body">Try searching for:</p>
+                  <div class="flex flex-wrap justify-center gap-2">
+                    <a href="/search?search=hoodie" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                      Hoodie
+                    </a>
+                    <a href="/search?search=tee" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                      T-Shirt
+                    </a>
+                    <a href="/search?search=pants" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                      Pants
+                    </a>
+                    <a href="/search?search=dress" class="px-4 py-2 text-sm font-body border border-border hover:bg-foreground hover:text-background transition-colors">
+                      Dress
+                    </a>
+                  </div>
+                  <div class="mt-6">
+                    <a href="/shop" class="btn-secondary">
+                      Browse All Products
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <script>
+    const sortSelect = document.getElementById('sort-select') as HTMLSelectElement;
+    const productGrid = document.getElementById('product-grid');
+
+    function getProductCards(): HTMLElement[] {
+      return Array.from(productGrid?.querySelectorAll('[data-product-card]') || []);
+    }
+
+    function applySort() {
+      const sortValue = sortSelect?.value || 'relevance';
+      const cards = getProductCards();
+
+      const comparators: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
+        relevance: (a, b) => Number(a.dataset.order) - Number(b.dataset.order),
+        newest: (a, b) => {
+          const diff = Number(b.dataset.badge === 'New') - Number(a.dataset.badge === 'New');
+          return diff !== 0 ? diff : Number(a.dataset.order) - Number(b.dataset.order);
+        },
+        'price-low': (a, b) => Number(a.dataset.price) - Number(b.dataset.price),
+        'price-high': (a, b) => Number(b.dataset.price) - Number(a.dataset.price),
+        bestselling: (a, b) => Number(b.dataset.reviews) - Number(a.dataset.reviews),
+      };
+
+      const compare = comparators[sortValue] || comparators.relevance;
+      [...cards].sort(compare).forEach((card) => productGrid?.appendChild(card));
+    }
+
+    sortSelect?.addEventListener('change', applySort);
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', applySort);
+  </script>
+</Layout>

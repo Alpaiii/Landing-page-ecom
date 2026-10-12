@@ -1,50 +1,162 @@
 ---
 import { siteConfig } from '../config/site';
+import { testimonials } from '../data/testimonials';
+import { categories } from '../data/categories';
+import { products } from '../data/products';
+import { formatPrice } from '../utils/currency';
+
+const reviewCount = testimonials.length;
+const featuredProduct = products.find((p) => p.id === siteConfig.hero.shopTheLookProductId) ?? products[0];
 ---
 
-<section class="relative min-h-screen flex items-center overflow-hidden">
-  <!-- Background Image -->
-  <div class="absolute inset-0">
+<section class="relative flex flex-col lg:flex-row bg-background overflow-hidden">
+  <!-- Image: desktop column keeps the photo aspect ratio (1600x2337) so nothing is cropped -->
+  <div class="relative order-1 lg:order-2 w-full h-[65vh] lg:h-screen lg:w-auto aspect-[1600/2337] lg:aspect-auto shrink-0 overflow-hidden">
     <img
-      src="/images/hero.jpg"
-      alt="roquace Fashion Collection"
-      class="w-full h-full object-cover scale-105 animate-scale-in"
+      src="/images/miwa.webp"
+      alt="Model carrying roquace canvas tote bag"
+      class="w-full h-full object-cover object-top lg:object-center animate-fade-in"
+      width="1600"
+      height="2337"
       loading="eager"
+      fetchpriority="high"
+      decoding="async"
     />
-    <div class="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent"></div>
-  </div>
+    <div class="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent lg:hidden"></div>
 
-  <!-- Content -->
-  <div class="relative z-10 container-custom py-32 md:py-40 lg:py-48">
-    <div class="max-w-5xl">
-      <p class="tracking-[0.4em] uppercase text-foreground/50 mb-8 md:mb-10 animate-fade-in font-body text-sm md:text-base lg:text-lg" style="animation-delay: 0.2s">
-        New Collection
-      </p>
-      <h1 class="mb-8 md:mb-10 animate-slide-up font-heading font-light tracking-tight leading-[0.9]" style="animation-delay: 0.4s; font-size: clamp(4rem, 14vw, 12rem);">
-        Wear Your<br />
-        <span class="text-foreground/50">Identity.</span>
-      </h1>
-      <p class="text-foreground/50 max-w-2xl mb-12 md:mb-14 animate-slide-up font-body leading-relaxed text-lg md:text-xl lg:text-2xl" style="animation-delay: 0.6s">
-        Contemporary fashion designed for everyday expression.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-5 md:gap-6 animate-slide-up" style="animation-delay: 0.8s">
-        <a href="/shop" class="btn-primary py-5 px-12 text-base md:text-lg">
-          Shop Collection
+    <!-- Shop the look -->
+    <div class="absolute bottom-6 left-6 right-6 lg:bottom-10 lg:left-8 lg:right-auto lg:w-[280px] hidden lg:block">
+      <div class="bg-background/95 backdrop-blur-sm border border-foreground/10 p-4 flex items-center gap-4">
+        <a href={`/products/${featuredProduct.slug}`} class="shrink-0 w-16 h-20 overflow-hidden bg-background">
+          <img
+            src={featuredProduct.thumbnail}
+            alt={featuredProduct.name}
+            class="w-full h-full object-cover"
+            width="200"
+            height="250"
+            loading="lazy"
+            decoding="async"
+          />
         </a>
-        <a href="/about" class="btn-secondary py-5 px-12 text-base md:text-lg">
-          Explore Lookbook
-        </a>
+        <div class="min-w-0">
+          <p class="text-[0.65rem] tracking-[0.2em] uppercase text-foreground/40 font-body mb-1">
+            Featured Bag
+          </p>
+          <a
+            href={`/products/${featuredProduct.slug}`}
+            class="block font-heading text-base leading-tight hover:text-accent transition-colors truncate"
+          >
+            {featuredProduct.name}
+          </a>
+          <p class="text-sm text-foreground/60 font-body mt-1">
+            {formatPrice(featuredProduct.price)}
+          </p>
+        </div>
+        <button
+          class="quick-view-btn shrink-0 bg-foreground text-background px-4 py-3 text-[0.65rem] tracking-[0.15em] uppercase font-body hover:bg-accent transition-colors"
+          data-product-id={featuredProduct.id}
+          aria-label={`Quick view ${featuredProduct.name}`}
+        >
+          Quick View
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Scroll Indicator -->
-  <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-float">
-    <div class="flex flex-col items-center gap-3">
-      <span class="text-sm tracking-[0.3em] uppercase text-foreground/40 font-body">Scroll</span>
-      <svg class="w-6 h-6 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-      </svg>
+  <!-- Content -->
+  <div class="relative z-10 order-2 lg:order-1 flex-1 flex items-center">
+    <style>
+      /* Animations below start from opacity 0. Without this guard they would stay invisible
+         for users who prefer reduced motion. */
+      @media (prefers-reduced-motion: no-preference) {
+        .hero-anim { opacity: 0; animation: heroFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .hero-rise { opacity: 0; animation: heroRise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes heroFade {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes heroRise {
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      }
+    </style>
+
+    <div class="container-custom py-16 md:py-24 lg:py-28">
+      <div class="max-w-2xl">
+        <!-- Offer pills -->
+        <div class="flex flex-wrap gap-2 mb-8 md:mb-10 hero-anim" style="animation-delay: 0.1s">
+          {siteConfig.hero.offerPills.map((pill) => (
+            <span class="border border-foreground/20 px-4 py-2 text-[0.65rem] sm:text-xs tracking-[0.15em] uppercase font-body text-foreground/70">
+              {pill}
+            </span>
+          ))}
+        </div>
+
+        <p class="tracking-[0.4em] uppercase text-foreground/50 mb-6 md:mb-8 hero-anim font-body text-sm md:text-base lg:text-lg" style="animation-delay: 0.2s">
+          {siteConfig.hero.eyebrow}
+        </p>
+
+        <h1 class="mb-8 md:mb-10 hero-rise font-heading font-light tracking-tight leading-[0.9] text-[clamp(3rem,10vw,7rem)] lg:text-[clamp(2.5rem,5.2vw,5rem)]" style="animation-delay: 0.3s">
+          {siteConfig.hero.headline}<br />
+          <span class="text-foreground/50">{siteConfig.hero.headlineAccent}</span>
+        </h1>
+
+        <p class="text-foreground/50 max-w-2xl mb-10 md:mb-12 hero-rise font-body leading-relaxed text-lg md:text-xl lg:text-2xl" style="animation-delay: 0.45s">
+          {siteConfig.hero.subcopy}
+        </p>
+
+        <div class="flex flex-col sm:flex-row flex-wrap gap-4 md:gap-5 hero-rise" style="animation-delay: 0.6s">
+          <a href={siteConfig.hero.primaryCta.href} class="btn-primary py-5 px-10 md:px-12 text-base md:text-lg">
+            {siteConfig.hero.primaryCta.label}
+          </a>
+          <a href={siteConfig.hero.secondaryCta.href} class="btn-secondary py-5 px-10 md:px-12 text-base md:text-lg">
+            {siteConfig.hero.secondaryCta.label}
+          </a>
+        </div>
+
+        <!-- Social proof -->
+        <div class="mt-10 md:mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 hero-rise" style="animation-delay: 0.75s">
+          <span class="flex items-center gap-1" aria-hidden="true">
+            {[0, 1, 2, 3, 4].map(() => (
+              <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
+              </svg>
+            ))}
+          </span>
+          <span class="font-body text-sm text-foreground/70">
+            <strong class="text-foreground font-medium">{siteConfig.metrics.rating}</strong>
+            <span class="text-foreground/50"> ({reviewCount} ulasan)</span>
+          </span>
+          <span class="hidden sm:block w-px h-4 bg-foreground/20" aria-hidden="true"></span>
+          <span class="font-body text-sm text-foreground/50">
+            <strong class="text-foreground font-medium">{siteConfig.metrics.customers}</strong>
+            {` ${siteConfig.metrics.customersLabel}`}
+          </span>
+        </div>
+
+        <!-- Category quick links -->
+        <div class="mt-8 md:mt-10 flex flex-wrap gap-3 hero-rise" style="animation-delay: 0.9s">
+          {categories.map((category) => (
+            <a
+              href={`/shop/${category.slug}`}
+              class="border border-foreground/20 px-5 py-2.5 text-[0.65rem] sm:text-xs tracking-[0.15em] uppercase font-body text-foreground/70 hover:border-foreground hover:text-foreground transition-colors"
+            >
+              {category.name}
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+<!-- Scroll indicator: sibling of the hero columns so it can centre on the page -->
+<div class="relative flex justify-center py-8 bg-background">
+  <div class="animate-float flex flex-col items-center gap-3">
+    <span class="text-sm tracking-[0.3em] uppercase text-foreground/40 font-body">Scroll</span>
+    <svg class="w-6 h-6 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+    </svg>
+  </div>
+</div>

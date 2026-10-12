@@ -1,0 +1,54 @@
+---
+/**
+ * Breadcrumb navigation.
+ *
+ * Rendered as a real `nav` + ordered list so it is announced correctly, with
+ * the final item marked as the current page. The matching JSON-LD
+ * BreadcrumbList lives on the individual pages.
+ */
+export interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: Crumb[];
+  class?: string;
+}
+
+const { items, class: className = '' } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class={className}>
+  <ol class="flex flex-wrap items-center gap-2 text-sm font-body text-foreground/60">
+    {items.map((item, index) => {
+      const isLast = index === items.length - 1;
+
+      return (
+        <li class="flex items-center gap-2">
+          {item.href && !isLast ? (
+            <a href={item.href} class="hover:text-foreground transition-colors">
+              {item.label}
+            </a>
+          ) : (
+            <span class="text-foreground" aria-current={isLast ? 'page' : undefined}>
+              {item.label}
+            </span>
+          )}
+
+          {!isLast && (
+            <svg
+              class="w-4 h-4 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          )}
+        </li>
+      );
+    })}
+  </ol>
+</nav>

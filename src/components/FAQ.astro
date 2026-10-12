@@ -1,33 +1,22 @@
 ---
-const faqs = [
-  {
-    question: "What sizes are available?",
-    answer: "We offer sizes XS through XL. Please check our size guide on each product page for detailed measurements."
-  },
-  {
-    question: "How can I order?",
-    answer: "Simply click 'Order via WhatsApp' on any product page. Our team will assist you with the ordering process."
-  },
-  {
-    question: "Do you offer COD?",
-    answer: "Yes, we offer COD for Jabodetabek area. For other cities, payment via bank transfer or e-wallet is available."
-  },
-  {
-    question: "How long does shipping take?",
-    answer: "Regular shipping takes 2-3 business days. Express shipping 1-2 business days. Free shipping for orders above Rp500,000."
-  },
-  {
-    question: "What is your return policy?",
-    answer: "Returns are accepted within 7 days of receipt in unworn condition with tags still attached."
-  },
-];
+import { getOrderedFAQs } from '../data/faq';
+
+interface Props {
+  /** Renders as the page `h1` when the component is the whole page content. */
+  headingLevel?: 'h1' | 'h2';
+}
+
+const { headingLevel = 'h2' } = Astro.props;
+const Heading = headingLevel;
+
+const faqs = getOrderedFAQs();
 ---
 
 <section id="faq" class="section-padding bg-background">
   <div class="container-custom max-w-3xl">
     <div class="text-center mb-16 md:mb-20">
       <p class="text-body tracking-[0.3em] uppercase text-muted mb-6 font-body">FAQ</p>
-      <h2 class="heading-lg">Frequently Asked Questions</h2>
+      <Heading class="heading-lg">Frequently Asked Questions</Heading>
     </div>
     <div class="space-y-0">
       {faqs.map((faq, index) => (

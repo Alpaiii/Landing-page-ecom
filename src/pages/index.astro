@@ -1,11 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Navbar from '../components/Navbar.astro';
 import Hero from '../components/Hero.astro';
 import TrustMetrics from '../components/TrustMetrics.astro';
 import CollectionCard from '../components/CollectionCard.astro';
-import ProductCard from '../components/ProductCard.astro';
+import ProductCardV2 from '../components/ProductCardV2.astro';
 import CategoryGrid from '../components/CategoryGrid.astro';
+import TrustSection from '../components/TrustSection.astro';
+import ShopTheLook from '../components/ShopTheLook.astro';
 import BrandStory from '../components/BrandStory.astro';
 import USP from '../components/USP.astro';
 import Testimonials from '../components/Testimonials.astro';
@@ -13,18 +16,23 @@ import InstagramGrid from '../components/InstagramGrid.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
 import Footer from '../components/Footer.astro';
-import { products, getNewArrivals, getBestSellers } from '../data/products';
 import { collections, getFeaturedCollections } from '../data/collections';
+import { fetchProducts } from '../utils/productApi';
 
-const newArrivals = getNewArrivals(4);
-const bestSellers = getBestSellers(4);
+// Fetch products from API
+const products = await fetchProducts();
+
+// Filter new arrivals and best sellers
+const newArrivals = products.filter(p => p.newArrival).slice(0, 4);
+const bestSellers = products.filter(p => p.featured).slice(0, 4);
 const featuredCollections = getFeaturedCollections();
 ---
 
 <Layout>
+  <AnnouncementBar />
   <Navbar />
 
-  <main>
+  <main id="main-content">
     <Hero />
     
     <!-- Trust Metrics -->
@@ -74,15 +82,15 @@ const featuredCollections = getFeaturedCollections();
       </div>
       <div class="px-6 sm:px-8 lg:px-12">
         <div class="flex gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-8 lg:scroll-px-12 pb-4 scrollbar-hide">
-          {newArrivals.map((product) => (
+          {newArrivals.map((product, index) => (
             <div class="w-[80vw] sm:w-[46vw] md:w-[38vw] lg:w-[30vw] xl:w-[400px] shrink-0 snap-start">
-              <ProductCard product={product} />
+              <ProductCardV2 product={product} index={index} showQuickAdd={false} />
             </div>
           ))}
         </div>
       </div>
       <div class="text-center mt-10 md:mt-14">
-        <a href="/shop?filter=new" class="btn-secondary">
+        <a href="/shop/new-arrivals" class="btn-secondary">
           View All New Arrivals
         </a>
       </div>
@@ -91,6 +99,8 @@ const featuredCollections = getFeaturedCollections();
     <CategoryGrid />
     <BrandStory />
     <USP />
+    <ShopTheLook />
+    <TrustSection />
     
     <!-- Best Sellers -->
     <section class="section-padding overflow-x-hidden">
@@ -103,13 +113,13 @@ const featuredCollections = getFeaturedCollections();
       </div>
       <div class="px-6 sm:px-8 lg:px-12">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-          {bestSellers.map((product) => (
-            <ProductCard product={product} />
+          {bestSellers.map((product, index) => (
+            <ProductCardV2 product={product} index={index} showQuickAdd={false} />
           ))}
         </div>
       </div>
       <div class="text-center mt-10 md:mt-14">
-        <a href="/shop?filter=bestseller" class="btn-secondary">
+        <a href="/shop?filter=Best+Seller" class="btn-secondary">
           View All Best Sellers
         </a>
       </div>

@@ -1,0 +1,349 @@
+---
+export const prerender = false;
+
+// Auth check
+const token = Astro.cookies.get('admin_token')?.value;
+if (!token) {
+  return Astro.redirect('/admin/login');
+}
+
+// Fetch products
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:4000';
+let products: any[] = [];
+let error = '';
+
+try {
+  const response = await fetch(`${API_URL}/api/products`);
+  if (response.ok) {
+    const result = await response.json();
+    products = result.data || [];
+  }
+} catch (e: any) {
+  error = e.message;
+}
+
+const title = 'Products - Roquace Admin';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      width: 250px;
+      background: #1a1a1a;
+      color: white;
+      padding: 2rem 1rem;
+    }
+    
+    .sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #333;
+    }
+    
+    .nav-menu {
+      list-style: none;
+    }
+    
+    .nav-menu li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .nav-menu a {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: #aaa;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    
+    .nav-menu a:hover,
+    .nav-menu a.active {
+      background: #333;
+      color: white;
+    }
+    
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .header h2 {
+      font-size: 2rem;
+      color: #1a1a1a;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .btn-primary {
+      background: #1a1a1a;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #333;
+    }
+    
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    
+    .btn-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+    
+    .products-table {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th {
+      background: #f9f9f9;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    td {
+      padding: 1rem;
+      border-top: 1px solid #e5e5e5;
+    }
+    
+    .product-image {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    
+    .product-name {
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.25rem;
+    }
+    
+    .product-category {
+      color: #666;
+      font-size: 0.875rem;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #666;
+    }
+    
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <h1>Roquace Admin</h1>
+      <ul class="nav-menu">
+        <li><a href="/admin/dashboard">Dashboard</a></li>
+        <li><a href="/admin/products" class="active">Products</a></li>
+        <li><a href="/admin/products/add">Add Product</a></li>
+        <li><a href="/admin/orders">Orders</a></li>
+        <li><a href="/" target="_blank">View Store</a></li>
+      </ul>
+    </aside>
+    
+    <main class="main-content">
+      <div class="header">
+        <h2>Products</h2>
+        <div class="header-actions">
+          <a href="/admin/products/add" class="btn btn-primary">Add Product</a>
+          <button class="btn btn-danger" id="logout-btn">Logout</button>
+        </div>
+      </div>
+      
+      {error && <div class="error">{error}</div>}
+      
+      <div class="products-table">
+        {products.length === 0 ? (
+          <div class="empty-state">
+            <h3>No products yet</h3>
+            <p>Start by adding your first product</p>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product: any) => (
+                <tr>
+                  <td>
+                    {product.images && product.images[0] ? (
+                      <img src={product.images[0]} alt={product.name} class="product-image" />
+                    ) : (
+                      <div class="product-image" style="background: #e5e5e5;"></div>
+                    )}
+                  </td>
+                  <td>
+                    <div class="product-name">{product.name}</div>
+                    <div class="product-category">{product.category}</div>
+                  </td>
+                  <td>${product.price}</td>
+                  <td>
+                    {product.stock > 10 ? (
+                      <span class="badge badge-success">{product.stock} in stock</span>
+                    ) : (
+                      <span class="badge badge-warning">{product.stock} in stock</span>
+                    )}
+                  </td>
+                  <td>
+                    {product.is_featured && <span class="badge badge-info">Featured</span>}
+                    {product.is_new && <span class="badge badge-info">New</span>}
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <a href={`/admin/products/edit/${product.id}`} class="btn btn-primary btn-small">Edit</a>
+                      <button class="btn btn-danger btn-small delete-btn" data-id={product.id}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    const API_URL = 'http://localhost:4000';
+    const token = document.cookie.split('; ').find(row => row.startsWith('admin_token='))?.split('=')[1];
+    
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      document.cookie = 'admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      window.location.href = '/admin/login';
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = (e.target as HTMLElement).dataset.id;
+        
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        
+        try {
+          const response = await fetch(`${API_URL}/api/products/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            alert('Failed to delete product');
+          }
+        } catch (error) {
+          alert('Error deleting product');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

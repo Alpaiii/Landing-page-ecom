@@ -1,6 +1,13 @@
 ---
 import { siteConfig } from '../config/site';
-import Cart from '../components/Cart.astro';
+import QuickView from '../components/QuickView.astro';
+import MobileBottomNav from '../components/MobileBottomNav.astro';
+import { products } from '../data/products';
+import '../styles/global.css';
+
+// JSON island consumed by QuickView.astro. `<` is escaped so a product field
+// can never terminate the script tag.
+const productDataJson = JSON.stringify(products).replace(/</g, '\\u003c');
 
 interface Props {
   title?: string;
@@ -54,9 +61,44 @@ const pageTitle = title === siteConfig.name ? `${siteConfig.name} — ${siteConf
   />
 </head>
 <body class="min-h-screen">
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
   <slot />
-  
-  <!-- Global Cart Component -->
-  <Cart />
+
+  <!-- Product catalogue island, read by the Quick View modal -->
+  <script is:inline type="application/json" id="product-data" set:html={productDataJson}></script>
+
+  <!-- Global Quick View Component -->
+  <QuickView />
+
+  <MobileBottomNav />
+
+  <script>
+    // `.animate-on-scroll` starts at opacity 0, so it must be revealed by JS.
+    // Without an observer (or for reduced-motion visitors) everything is shown.
+    const targets = document.querySelectorAll('.animate-on-scroll');
+
+    if (targets.length > 0) {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+        targets.forEach((el) => el.classList.add('visible'));
+      } else {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
+        );
+
+        targets.forEach((el) => observer.observe(el));
+      }
+    }
+  </script>
 </body>
 </html>

@@ -1,0 +1,299 @@
+---
+/**
+ * Quick View modal.
+ *
+ * Reads the product catalogue from the JSON island rendered by Layout.astro
+ * (#product-data), so the card buttons only need a `data-product-id` attribute.
+ * The island holds the full product objects, so anything added to the cart
+ * here carries every field the cart UI and product pages read.
+ */
+---
+
+<div id="quick-view" class="fixed inset-0 z-[70] hidden">
+  <div id="quick-view-backdrop" class="absolute inset-0 bg-foreground/50 backdrop-blur-sm"></div>
+
+  <div class="relative min-h-full flex items-end sm:items-center justify-center sm:p-6">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="quick-view-title"
+      class="relative bg-background w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-xl"
+    >
+      <button
+        id="quick-view-close"
+        class="absolute top-4 right-4 z-10 p-2 text-foreground/60 hover:text-foreground transition-colors"
+        aria-label="Close quick view"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div class="grid sm:grid-cols-2">
+        <div class="aspect-[4/5] overflow-hidden bg-secondary/30">
+          <img id="quick-view-image" src="" alt="" class="w-full h-full object-cover" />
+        </div>
+
+        <div class="p-6 sm:p-8 lg:p-10 flex flex-col">
+          <p id="quick-view-badge" class="hidden text-xs tracking-[0.2em] uppercase text-foreground/50 font-body mb-3"></p>
+          <h2 id="quick-view-title" class="heading-sm mb-2"></h2>
+
+          <div class="flex items-center gap-3 mb-5">
+            <span id="quick-view-rating" class="text-sm text-muted font-body"></span>
+          </div>
+
+          <p id="quick-view-price" class="text-xl font-body mb-5"></p>
+          <p id="quick-view-description" class="text-sm text-foreground/60 font-body leading-relaxed mb-7"></p>
+
+          <div class="mb-6">
+            <p class="text-xs tracking-[0.2em] uppercase text-foreground/50 font-body mb-3">Color</p>
+            <div id="quick-view-colors" class="flex flex-wrap gap-3"></div>
+          </div>
+
+          <div class="mb-7">
+            <p class="text-xs tracking-[0.2em] uppercase text-foreground/50 font-body mb-3">Size</p>
+            <div id="quick-view-sizes" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <p id="quick-view-error" class="hidden text-sm text-error font-body mb-4"></p>
+
+          <div class="mt-auto flex flex-col gap-3">
+            <button id="quick-view-add" class="btn-primary w-full py-4">Add to Cart</button>
+            <a id="quick-view-link" href="#" class="btn-secondary w-full py-4 text-center">View Full Details</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { trapFocus } from '../utils/focusTrap';
+
+  interface QuickViewProduct {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    thumbnail: string;
+    badge?: string;
+    rating: number;
+    reviewCount: number;
+    description: string;
+    inStock: boolean;
+    colors: { name: string; hex: string }[];
+    sizes: { name: string; available: boolean }[];
+  }
+
+  const catalog: QuickViewProduct[] = (() => {
+    const el = document.getElementById('product-data');
+    if (!el?.textContent) return [];
+    try {
+      return JSON.parse(el.textContent);
+    } catch {
+      return [];
+    }
+  })();
+
+  const overlay = document.getElementById('quick-view');
+  const backdrop = document.getElementById('quick-view-backdrop');
+  const closeBtn = document.getElementById('quick-view-close');
+  const image = document.getElementById('quick-view-image') as HTMLImageElement | null;
+  const badge = document.getElementById('quick-view-badge');
+  const title = document.getElementById('quick-view-title');
+  const rating = document.getElementById('quick-view-rating');
+  const priceEl = document.getElementById('quick-view-price');
+  const description = document.getElementById('quick-view-description');
+  const colorsEl = document.getElementById('quick-view-colors');
+  const sizesEl = document.getElementById('quick-view-sizes');
+  const errorEl = document.getElementById('quick-view-error');
+  const addBtn = document.getElementById('quick-view-add') as HTMLButtonElement | null;
+  const link = document.getElementById('quick-view-link') as HTMLAnchorElement | null;
+
+  const CART_KEY = 'roquace_cart';
+
+  let current: QuickViewProduct | null = null;
+  let selectedColor = '';
+  let selectedSize = '';
+  let lastFocused: HTMLElement | null = null;
+  let releaseFocusTrap: (() => void) | null = null;
+
+  function renderPrice(value: number): string {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  function setError(message: string): void {
+    if (!errorEl) return;
+    errorEl.textContent = message;
+    errorEl.classList.toggle('hidden', message === '');
+  }
+
+  function selectColor(name: string): void {
+    selectedColor = name;
+    colorsEl?.querySelectorAll<HTMLElement>('[data-qv-color]').forEach((swatch) => {
+      const active = swatch.dataset.qvColor === name;
+      swatch.classList.toggle('ring-1', active);
+      swatch.classList.toggle('ring-foreground', active);
+      swatch.classList.toggle('ring-offset-2', active);
+      swatch.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function selectSize(name: string): void {
+    selectedSize = name;
+    sizesEl?.querySelectorAll<HTMLElement>('[data-qv-size]').forEach((btn) => {
+      const active = btn.dataset.qvSize === name;
+      btn.classList.toggle('bg-foreground', active);
+      btn.classList.toggle('text-background', active);
+      btn.classList.toggle('border-foreground', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function openQuickView(product: QuickViewProduct): void {
+    current = product;
+    selectedColor = '';
+    selectedSize = '';
+    setError('');
+
+    if (image) {
+      image.src = product.thumbnail;
+      image.alt = product.name;
+    }
+    if (badge) {
+      badge.textContent = product.badge ?? '';
+      badge.classList.toggle('hidden', !product.badge);
+    }
+    if (title) title.textContent = product.name;
+    if (rating) rating.textContent = `${product.rating} · ${product.reviewCount} reviews`;
+    if (priceEl) priceEl.textContent = renderPrice(product.price);
+    if (description) description.textContent = product.description;
+    if (link) link.href = `/products/${product.slug}`;
+    if (addBtn) {
+      addBtn.disabled = !product.inStock;
+      addBtn.textContent = product.inStock ? 'Add to Cart' : 'Sold Out';
+    }
+
+    // Colors
+    if (colorsEl) {
+      colorsEl.innerHTML = '';
+      product.colors.forEach((color) => {
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.dataset.qvColor = color.name;
+        swatch.setAttribute('aria-label', color.name);
+        swatch.className = 'w-8 h-8 rounded-full border border-border transition-shadow';
+        swatch.style.backgroundColor = color.hex;
+        swatch.addEventListener('click', () => selectColor(color.name));
+        colorsEl.appendChild(swatch);
+      });
+    }
+
+    // Sizes
+    if (sizesEl) {
+      sizesEl.innerHTML = '';
+      product.sizes.forEach((size) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.qvSize = size.name;
+        btn.textContent = size.name;
+        btn.disabled = !size.available;
+        btn.className =
+          'min-w-[3.5rem] px-4 py-2.5 text-sm tracking-wider uppercase font-body border border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed';
+        btn.addEventListener('click', () => selectSize(size.name));
+        sizesEl.appendChild(btn);
+      });
+    }
+
+    lastFocused = document.activeElement as HTMLElement | null;
+    overlay?.classList.remove('hidden');
+    overlay?.setAttribute('role', 'dialog');
+    overlay?.setAttribute('aria-modal', 'true');
+    overlay?.setAttribute('aria-label', 'Quick View');
+    document.body.style.overflow = 'hidden';
+    
+    releaseFocusTrap?.();
+    if (overlay) {
+      releaseFocusTrap = trapFocus(overlay, { onEscape: closeQuickView });
+    }
+    closeBtn?.focus();
+  }
+
+  function closeQuickView(): void {
+    releaseFocusTrap?.();
+    releaseFocusTrap = null;
+    
+    overlay?.classList.add('hidden');
+    document.body.style.overflow = '';
+    current = null;
+    lastFocused?.focus();
+  }
+
+  function addToCart(): void {
+    if (!current) return;
+    if (!selectedColor) {
+      setError('Please pick a color first.');
+      return;
+    }
+    if (!selectedSize) {
+      setError('Please pick a size first.');
+      return;
+    }
+
+    let cart: any[] = [];
+    try {
+      cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    } catch {
+      cart = [];
+    }
+
+    const existing = cart.find(
+      (item) => item.productId === current!.id && item.color === selectedColor && item.size === selectedSize
+    );
+
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({
+        productId: current.id,
+        product: current,
+        color: selectedColor,
+        size: selectedSize,
+        quantity: 1,
+        price: current.price,
+      });
+    }
+
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+    closeQuickView();
+    window.dispatchEvent(new CustomEvent('open-cart'));
+  }
+
+  // Delegated so cards rendered anywhere on the page work.
+  document.addEventListener('click', (event) => {
+    const trigger = (event.target as HTMLElement | null)?.closest<HTMLElement>('.quick-view-btn');
+    if (!trigger) return;
+    const id = trigger.dataset.productId;
+    const product = catalog.find((item) => item.id === id);
+    if (product) {
+      event.preventDefault();
+      openQuickView(product);
+    }
+  });
+
+  closeBtn?.addEventListener('click', closeQuickView);
+  backdrop?.addEventListener('click', closeQuickView);
+  addBtn?.addEventListener('click', addToCart);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
+      closeQuickView();
+    }
+  });
+</script>

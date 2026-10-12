@@ -1,0 +1,280 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Login';
+const description = 'Sign in to your account';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-3xl md:text-4xl font-heading mb-4">Welcome Back</h1>
+          <p class="text-foreground/70 font-body">Sign in to your account</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="space-y-6 mb-8">
+          <div>
+            <label for="email" class="block text-sm tracking-wider uppercase font-body mb-2">Email *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+            <p id="email-error" class="text-xs text-red-500 mt-1 hidden"></p>
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm tracking-wider uppercase font-body mb-2">Password *</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              class="w-full px-4 py-3 border border-border focus:outline-none focus:border-foreground font-body"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+            <p id="password-error" class="text-xs text-red-500 mt-1 hidden"></p>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="remember" class="w-4 h-4 border-border" />
+              <span class="text-sm font-body text-foreground/70">Remember me</span>
+            </label>
+            <a href="/forgot-password" class="text-sm font-body text-foreground/70 hover:text-foreground underline">
+              Forgot password?
+            </a>
+          </div>
+
+          <div id="login-error" class="hidden p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-body">
+            <!-- Error message -->
+          </div>
+
+          <button
+            type="submit"
+            id="login-btn"
+            class="w-full py-4 bg-foreground text-background text-sm tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors"
+          >
+            Sign In
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="relative mb-8">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-border"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-4 bg-background text-foreground/60 font-body">OR</span>
+          </div>
+        </div>
+
+        <!-- Social Login -->
+        <div class="space-y-3 mb-8">
+          <button
+            type="button"
+            class="w-full py-4 border border-border text-sm tracking-wider uppercase font-body hover:bg-foreground/5 transition-colors flex items-center justify-center gap-3"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+          </button>
+        </div>
+
+        <!-- Register Link -->
+        <div class="text-center">
+          <p class="text-sm font-body text-foreground/70">
+            Don't have an account? 
+            <a href="/register" class="text-foreground underline hover:no-underline">
+              Create account
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  const loginForm = document.getElementById('login-form');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+
+  // Validation utilities
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function showFieldError(fieldId: string, message: string) {
+    const field = document.getElementById(fieldId) as HTMLInputElement;
+    const error = document.getElementById(`${fieldId}-error`);
+    
+    if (field) {
+      field.classList.add('border-red-500');
+      field.classList.remove('border-border');
+    }
+    if (error) {
+      error.textContent = message;
+      error.classList.remove('hidden');
+    }
+  }
+
+  function clearFieldError(fieldId: string) {
+    const field = document.getElementById(fieldId) as HTMLInputElement;
+    const error = document.getElementById(`${fieldId}-error`);
+    
+    if (field) {
+      field.classList.remove('border-red-500');
+      field.classList.add('border-border');
+    }
+    if (error) {
+      error.textContent = '';
+      error.classList.add('hidden');
+    }
+  }
+
+  function validateEmail(email: string): boolean {
+    return emailRegex.test(email);
+  }
+
+  // API configuration
+  const API_URL = 'http://localhost:4000';
+
+  function showError(message: string) {
+    if (loginError) {
+      loginError.textContent = message;
+      loginError.classList.remove('hidden');
+    }
+  }
+
+  function hideError() {
+    loginError?.classList.add('hidden');
+  }
+
+  async function authenticateUser(email: string, password: string) {
+    try {
+      const response = await fetch(`${API_URL}/api/customers/customer-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store token and user data
+        localStorage.setItem('customer_token', data.token);
+        localStorage.setItem('roquace_session', JSON.stringify({
+          user: data.customer,
+          loggedIn: true,
+          loginTime: new Date().toISOString()
+        }));
+
+        // Redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('return') || '/account';
+        window.location.href = returnUrl;
+        
+        return true;
+      } else {
+        showError(data.error || 'Invalid email or password');
+        return false;
+      }
+    } catch (error) {
+      showError('Failed to connect to server. Please try again.');
+      return false;
+    }
+  }
+
+  // Real-time validation
+  const emailField = document.getElementById('email') as HTMLInputElement;
+  const passwordField = document.getElementById('password') as HTMLInputElement;
+
+  emailField?.addEventListener('blur', () => {
+    const value = emailField.value.trim();
+    if (value && !validateEmail(value)) {
+      showFieldError('email', 'Please enter a valid email address');
+    } else {
+      clearFieldError('email');
+    }
+  });
+
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError();
+
+    const email = emailField.value.trim();
+    const password = passwordField.value;
+    const remember = (document.getElementById('remember') as HTMLInputElement).checked;
+
+    let hasError = false;
+
+    if (!email) {
+      showFieldError('email', 'Email is required');
+      hasError = true;
+    } else if (!validateEmail(email)) {
+      showFieldError('email', 'Please enter a valid email address');
+      hasError = true;
+    } else {
+      clearFieldError('email');
+    }
+
+    if (!password) {
+      showFieldError('password', 'Password is required');
+      hasError = true;
+    } else {
+      clearFieldError('password');
+    }
+
+    if (hasError) return;
+
+    // Show loading state
+    if (loginBtn) {
+      loginBtn.textContent = 'Signing in...';
+      loginBtn.setAttribute('disabled', 'true');
+    }
+
+    // Authenticate with API
+    const success = await authenticateUser(email, password);
+
+    if (!success) {
+      if (loginBtn) {
+        loginBtn.textContent = 'Sign In';
+        loginBtn.removeAttribute('disabled');
+      }
+    }
+  });
+
+  // Check if already logged in
+  try {
+    const session = JSON.parse(localStorage.getItem('roquace_session') || '{}');
+    if (session.loggedIn) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('return') || '/account';
+      window.location.href = returnUrl;
+    }
+  } catch (e) {
+    // Not logged in
+  }
+</script>

@@ -10,6 +10,18 @@
     --color-accent: #8B6F47;
     --color-accent-light: #A68B5B;
     --color-border: #E5E5E5;
+
+    /* channel triplets, required for Tailwind opacity modifiers (bg-foreground/20 etc) */
+    --color-background-rgb: 247 245 240;
+    --color-foreground-rgb: 23 23 23;
+    --color-muted-rgb: 119 119 119;
+    --color-accent-rgb: 139 111 71;
+    --color-accent-light-rgb: 166 139 91;
+    --color-border-rgb: 229 229 229;
+    /* subtle warm neutral: secondary/30 must stay visible against the cream background */
+    --color-secondary-rgb: 237 234 227;
+    /* destructive actions only (cart item remove) */
+    --color-error-rgb: 220 38 38;
   }
 
   html {
@@ -35,6 +47,58 @@
   ::selection {
     @apply bg-accent text-white;
   }
+
+  /* Visible focus for keyboard users only. Pointer users keep the default. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-foreground ring-offset-2 ring-offset-background;
+  }
+
+  /* Remove the ring for pointer interactions so it never shows on tap. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Touch targets: interactive controls stay at least 44px on touch devices
+     (WCAG 2.2 AA Target Size (Minimum)). */
+  @media (pointer: coarse) {
+    button,
+    a[href],
+    input[type='checkbox'],
+    input[type='radio'],
+    select,
+    label:has(input[type='checkbox']),
+    label:has(input[type='radio']) {
+      min-height: 44px;
+    }
+
+    /* Icon-only controls need the extra room without growing their box model. */
+    button {
+      min-width: 44px;
+    }
+  }
+
+  /* Respect reduced-motion: kill every transition and animation, including
+     Tailwind's generated ones and the scroll-reveal states. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Scroll-reveal elements must be visible, never stuck at opacity 0. */
+    .animate-on-scroll {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    html {
+      scroll-behavior: auto;
+    }
+  }
 }
 
 @layer components {
@@ -53,7 +117,7 @@
   .btn-primary {
     @apply inline-flex items-center justify-center px-10 py-5 bg-foreground text-background 
            font-body font-medium transition-all duration-500 ease-out
-           hover:bg-accent hover:text-white hover:shadow-lg hover:shadow-accent/20;
+           hover:bg-accent hover:text-white hover:shadow-lg hover:shadow-accent;
     font-size: clamp(0.875rem, 1.2vw, 1rem);
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -62,7 +126,7 @@
   .btn-secondary {
     @apply inline-flex items-center justify-center px-10 py-5 border-2 border-foreground text-foreground 
            font-body font-medium transition-all duration-500 ease-out
-           hover:bg-foreground hover:text-background hover:shadow-lg hover:shadow-foreground/20;
+           hover:bg-foreground hover:text-background hover:shadow-lg hover:shadow-foreground;
     font-size: clamp(0.875rem, 1.2vw, 1rem);
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -71,7 +135,7 @@
   .btn-accent {
     @apply inline-flex items-center justify-center px-10 py-5 bg-accent text-white 
            font-body font-medium transition-all duration-500 ease-out
-           hover:bg-accent-light hover:shadow-lg hover:shadow-accent/30;
+           hover:bg-accent-light hover:shadow-lg hover:shadow-accent-strong;
     font-size: clamp(0.875rem, 1.2vw, 1rem);
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -123,7 +187,7 @@
   }
 
   .text-muted {
-    @apply text-muted;
+    color: rgb(var(--color-muted-rgb) / 1);
   }
 
   .link-underline {
@@ -146,6 +210,11 @@
     @apply opacity-100 translate-y-0;
   }
 
+  /* used by the client-side shop filters to hide cards without a layout jump */
+  .is-filtered-out {
+    display: none !important;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -160,4 +229,39 @@
   .animate-delay-300 { animation-delay: 0.3s; }
   .animate-delay-400 { animation-delay: 0.4s; }
   .animate-delay-500 { animation-delay: 0.5s; }
+
+  /* Visually hidden but still announced by screen readers. */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+  }
+
+  /* Skip link: off-screen until focused via keyboard. */
+  .skip-link {
+    @apply sr-only;
+  }
+
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    @apply not-sr-only fixed top-4 left-4 z-[100] px-6 py-3 bg-foreground text-background;
+    font-size: 0.875rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Inline form error message, driven by aria-invalid. */
+  .field-error {
+    @apply text-sm text-red-600 font-body mt-1;
+  }
+
+  .input-invalid {
+    @apply border-red-600;
+  }
+
+  /* Count that changes in response to a user action (cart badge, filter
+     result total). Announced politely so it never interrupts. */
+  [aria-live='polite'] {
+    /* Intentionally no visual change — this is an announcement channel. */
+  }
 }

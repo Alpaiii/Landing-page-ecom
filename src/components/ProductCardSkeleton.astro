@@ -1,0 +1,65 @@
+---
+/**
+ * Skeleton loader for product cards.
+ *
+ * `containerClass` lets the caller match its own grid so the skeleton occupies
+ * exactly the same space the real cards will.
+ */
+interface Props {
+  count?: number;
+  containerClass?: string;
+}
+
+const { count = 8, containerClass = 'grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8' } = Astro.props;
+---
+
+<div class={containerClass} aria-hidden="true">
+  {[...Array(count)].map(() => (
+    <div class="animate-pulse">
+      <!-- Image skeleton -->
+      <div class="aspect-[4/5] bg-foreground/10 mb-4"></div>
+
+      <!-- Content skeleton -->
+      <div class="space-y-3">
+        <!-- Category -->
+        <div class="h-3 bg-foreground/10 w-1/4"></div>
+
+        <!-- Title -->
+        <div class="h-4 bg-foreground/10 w-3/4"></div>
+
+        <!-- Rating -->
+        <div class="flex gap-1">
+          {[...Array(5)].map(() => (
+            <div class="w-3 h-3 bg-foreground/10"></div>
+          ))}
+        </div>
+
+        <!-- Price -->
+        <div class="h-4 bg-foreground/10 w-1/2"></div>
+
+        <!-- Colors -->
+        <div class="flex gap-1.5">
+          {[...Array(3)].map(() => (
+            <div class="w-5 h-5 rounded-full bg-foreground/10"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Scoped so the name cannot collide with any other component's animation. */
+  .animate-pulse {
+    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>

@@ -1,20 +1,53 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Navbar from '../components/Navbar.astro';
+import ProductCardV2 from '../components/ProductCardV2.astro';
 import Footer from '../components/Footer.astro';
+import { getBestSellers } from '../data/products';
+
+const title = 'Page Not Found';
+const description = 'The page you are looking for does not exist.';
+
+// Keep the visitor moving: offer a way back into the catalogue.
+const suggestions = getBestSellers(4);
 ---
 
-<Layout title="Page Not Found">
+<Layout title={title} description={description}>
+  <AnnouncementBar />
   <Navbar />
 
-  <main class="min-h-screen flex items-center justify-center">
-    <div class="text-center container-custom">
-      <h1 class="heading-xl mb-4">404</h1>
-      <p class="text-foreground/60 font-body mb-8">The page you're looking for doesn't exist.</p>
-      <a href="/" class="btn-primary">
-        Back to Home
-      </a>
-    </div>
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom text-center">
+        <p class="text-sm tracking-[0.3em] uppercase text-muted mb-6 font-body">Error 404</p>
+        <h1 class="heading-xl mb-6">404</h1>
+        <p class="text-foreground/60 font-body max-w-md mx-auto mb-10">
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/" class="btn-primary">Back to Home</a>
+          <a href="/shop" class="btn-secondary">Browse Shop</a>
+        </div>
+      </div>
+    </section>
+
+    {suggestions.length > 0 && (
+      <section class="pb-20 md:pb-32">
+        <div class="container-custom">
+          <div class="text-center mb-12">
+            <p class="text-sm tracking-[0.3em] uppercase text-muted mb-4 font-body">Try These</p>
+            <h2 class="heading-md">Customer Favorites</h2>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {suggestions.map((product, index) => (
+              <ProductCardV2 product={product} index={index} showQuickAdd={false} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
   </main>
 
   <Footer />

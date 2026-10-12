@@ -32,10 +32,10 @@ export const desktopNavGroups: NavGroup[] = [
     label: "Shop",
     links: [
       { href: "/shop", label: "All Products" },
-      { href: "/shop?category=women", label: "Women" },
-      { href: "/shop?category=men", label: "Men" },
-      { href: "/shop?category=accessories", label: "Accessories" },
-      { href: "/shop?filter=new", label: "New Arrivals", isNew: true },
+      { href: "/shop/women", label: "Women" },
+      { href: "/shop/men", label: "Men" },
+      { href: "/shop/accessories", label: "Accessories" },
+      { href: "/shop/new-arrivals", label: "New Arrivals", isNew: true },
     ],
   },
 ];

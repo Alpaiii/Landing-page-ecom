@@ -1,16 +1,23 @@
+/**
+ * Design tokens.
+ *
+ * The CSS values live in `src/styles/global.css` (the `:root` block) and are
+ * wired into Tailwind by `tailwind.config.mjs`, which reads them as channel
+ * triplets (`--color-foreground-rgb: 23 23 23`) so opacity modifiers work.
+ * This file is only a typed mirror for JS-side logic — do not use it to
+ * generate CSS, the palette used to drift out of sync that way.
+ */
 export const themeConfig = {
-  // Colors
+  // Colors — mirror of the :root block in global.css
   colors: {
-    primary: "#1a1a1a",
-    secondary: "#f5f5f5",
-    accent: "#8b7355",
-    background: "#ffffff",
-    foreground: "#1a1a1a",
-    muted: "#6b7280",
-    border: "#e5e5e5",
-    success: "#22c55e",
-    error: "#ef4444",
-    warning: "#f59e0b",
+    background: "#F7F5F0",
+    foreground: "#171717",
+    muted: "#777777",
+    accent: "#8B6F47",
+    accentLight: "#A68B5B",
+    border: "#E5E5E5",
+    secondary: "#EDEAE3",
+    error: "#DC2626",
   },
 
   // Typography
@@ -35,7 +42,7 @@ export const themeConfig = {
 
   // Spacing
   spacing: {
-    container: "1400px",
+    container: "1280px", // matches max-w-7xl in .container-custom
     section: "6rem",
     sectionMobile: "4rem",
   },
@@ -72,7 +79,8 @@ export const themeConfig = {
     dropdown: "10",
     sticky: "20",
     fixed: "30",
-    modal: "40",
+    // Overlays above the navbar, which uses z-50.
+    modal: "70",
     tooltip: "50",
   },
 
@@ -89,42 +97,4 @@ export const themeConfig = {
     aspectRatio: "4/5",
     imageHoverScale: "1.05",
   },
-};
-
-// CSS Variables Generator (for use in global styles)
-export const cssVariables = `
-  :root {
-    --color-primary: ${themeConfig.colors.primary};
-    --color-secondary: ${themeConfig.colors.secondary};
-    --color-accent: ${themeConfig.colors.accent};
-    --color-background: ${themeConfig.colors.background};
-    --color-foreground: ${themeConfig.colors.foreground};
-    --color-muted: ${themeConfig.colors.muted};
-    --color-border: ${themeConfig.colors.border};
-    --color-success: ${themeConfig.colors.success};
-    --color-error: ${themeConfig.colors.error};
-    --color-warning: ${themeConfig.colors.warning};
-    
-    --font-heading: ${themeConfig.fonts.heading};
-    --font-body: ${themeConfig.fonts.body};
-    
-    --radius-sm: ${themeConfig.radius.sm};
-    --radius-md: ${themeConfig.radius.md};
-    --radius-lg: ${themeConfig.radius.lg};
-    --radius-xl: ${themeConfig.radius.xl};
-    
-    --container-max: ${themeConfig.spacing.container};
-    --section-padding: ${themeConfig.spacing.section};
-    --section-padding-mobile: ${themeConfig.spacing.sectionMobile};
-    
-    --animation-fast: ${themeConfig.animation.fast};
-    --animation-normal: ${themeConfig.animation.normal};
-    --animation-slow: ${themeConfig.animation.slow};
-    
-    --z-dropdown: ${themeConfig.zIndex.dropdown};
-    --z-sticky: ${themeConfig.zIndex.sticky};
-    --z-fixed: ${themeConfig.zIndex.fixed};
-    --z-modal: ${themeConfig.zIndex.modal};
-    --z-tooltip: ${themeConfig.zIndex.tooltip};
-  }
-`;
+} as const;

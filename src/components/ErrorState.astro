@@ -1,0 +1,107 @@
+---
+/**
+ * Shared error / failure state.
+ *
+ * Covers the PRD "Error States" requirements: generic failure, network loss and
+ * unavailable content, so pages do not each invent their own markup.
+ */
+interface Props {
+  type?: 'generic' | 'network' | 'not-found' | 'server';
+  title?: string;
+  message?: string;
+  /** Shown as a secondary action, e.g. "Try again". */
+  retryLabel?: string;
+}
+
+const {
+  type = 'generic',
+  title,
+  message,
+  retryLabel,
+} = Astro.props;
+
+const copy = {
+  generic: {
+    title: 'Something went wrong',
+    message: 'We hit an unexpected problem while loading this page. Please try again in a moment.',
+    retry: 'Try again',
+  },
+  network: {
+    title: 'Connection lost',
+    message: 'You appear to be offline. Check your internet connection and try again.',
+    retry: 'Retry',
+  },
+  'not-found': {
+    title: 'Not found',
+    message: 'We could not find what you were looking for. It may have been moved or removed.',
+    retry: '',
+  },
+  server: {
+    title: 'Server error',
+    message: 'Our team has been notified. Please try again in a few minutes.',
+    retry: 'Try again',
+  },
+} as const;
+
+const content = copy[type];
+const heading = title ?? content.title;
+const body = message ?? content.message;
+const retry = retryLabel ?? content.retry;
+---
+
+<div
+  class="text-center py-16 px-6 border border-border"
+  role="alert"
+  aria-live="assertive"
+>
+  <svg
+    class={`w-14 h-14 mx-auto mb-5 ${type === 'network' ? 'text-accent' : 'text-foreground/20'}`}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    {type === 'network' ? (
+      <>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M8.5 14.5a5 5 0 017 0M5 11a10 10 0 0114 0M2 7.5a15 15 0 0120 0"
+        />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3l18 18" />
+      </>
+    ) : (
+      <>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+        />
+      </>
+    )}
+  </svg>
+
+  <h2 class="text-xl font-heading mb-3">{heading}</h2>
+  <p class="text-foreground/60 font-body max-w-md mx-auto mb-8">{body}</p>
+
+  <div class="flex flex-col sm:flex-row gap-3 justify-center">
+    {retry && (
+      <button type="button" class="btn-primary" data-error-retry>
+        {retry}
+      </button>
+    )}
+    <a href="/contact" class="btn-secondary">Contact Support</a>
+  </div>
+</div>
+
+<script>
+  // Retry re-runs the current page load. Only useful when the failure came from
+  // a fetch or a partial render; a hard reload is the honest fallback.
+  document.querySelectorAll('[data-error-retry]').forEach((button) => {
+    button.addEventListener('click', () => {
+      window.location.reload();
+    });
+  });
+</script>

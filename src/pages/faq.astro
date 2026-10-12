@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import FAQ from '../components/FAQ.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'FAQ';
+const description = 'Answers to common questions about bag dimensions, ordering, payment, shipping, and returns at roquace.';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-24 md:pt-28">
+    <FAQ headingLevel="h1" />
+  </main>
+
+  <Footer />
+</Layout>

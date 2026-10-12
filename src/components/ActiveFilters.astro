@@ -1,0 +1,133 @@
+---
+// Active filters display with chips
+---
+
+<div id="active-filters" class="hidden mb-8">
+  <div class="flex flex-wrap items-center gap-3">
+    <span class="text-sm text-foreground/60 font-body">Active filters:</span>
+    <div id="active-filter-chips" class="flex flex-wrap gap-2">
+      <!-- Chips dynamically added here -->
+    </div>
+    <button
+      id="clear-all-active"
+      class="text-sm text-foreground/60 hover:text-foreground font-body underline"
+    >
+      Clear all
+    </button>
+  </div>
+</div>
+
+<style>
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .filter-chip:hover {
+    opacity: 0.8;
+  }
+
+  .filter-chip svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+</style>
+
+<script>
+  interface ActiveFilter {
+    type: string;
+    value: string;
+    label: string;
+  }
+
+  const activeFiltersContainer = document.getElementById('active-filters');
+  const activeFilterChips = document.getElementById('active-filter-chips');
+  const clearAllBtn = document.getElementById('clear-all-active');
+
+  function updateActiveFilters() {
+    const filters: ActiveFilter[] = [];
+
+    // Collect all checked filters
+    document.querySelectorAll<HTMLInputElement>('.filter-checkbox:checked').forEach((checkbox) => {
+      const name = checkbox.name;
+      const value = checkbox.value;
+      let label = '';
+
+      // Get user-friendly label
+      const labelElement = checkbox.closest('label')?.querySelector('span');
+      if (labelElement) {
+        label = labelElement.textContent?.trim() || value;
+      }
+
+      filters.push({ type: name, value, label });
+    });
+
+    // Show/hide container
+    if (filters.length === 0) {
+      activeFiltersContainer?.classList.add('hidden');
+      return;
+    }
+
+    activeFiltersContainer?.classList.remove('hidden');
+
+    // Render chips
+    if (activeFilterChips) {
+      activeFilterChips.innerHTML = filters
+        .map(
+          (filter) => `
+          <button 
+            class="filter-chip" 
+            data-filter-type="${filter.type}" 
+            data-filter-value="${filter.value}"
+          >
+            <span>${filter.label}</span>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        `
+        )
+        .join('');
+
+      // Add click handlers to chips
+      activeFilterChips.querySelectorAll('.filter-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const type = (chip as HTMLElement).dataset.filterType;
+          const value = (chip as HTMLElement).dataset.filterValue;
+
+          // Find and uncheck the corresponding checkbox
+          const checkbox = document.querySelector<HTMLInputElement>(
+            `.filter-checkbox[name="${type}"][value="${value}"]`
+          );
+          if (checkbox) {
+            checkbox.checked = false;
+            window.dispatchEvent(new CustomEvent('filters-changed'));
+          }
+        });
+      });
+    }
+  }
+
+  // Clear all active filters
+  clearAllBtn?.addEventListener('click', () => {
+    document.querySelectorAll<HTMLInputElement>('.filter-checkbox:checked').forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+    window.dispatchEvent(new CustomEvent('filters-changed'));
+  });
+
+  // Listen to filter changes
+  window.addEventListener('filters-changed', updateActiveFilters);
+
+  // Initial update
+  updateActiveFilters();
+</script>

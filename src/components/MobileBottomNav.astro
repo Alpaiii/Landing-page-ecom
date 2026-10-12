@@ -1,0 +1,168 @@
+---
+// Mobile bottom navigation (PRD §39). Fixed bar, desktop-hidden.
+const items = [
+  { label: 'Home', href: '/', icon: 'home' },
+  { label: 'Shop', href: '/shop', icon: 'shop' },
+  { label: 'Search', href: '#search', icon: 'search' },
+  { label: 'Wishlist', href: '/wishlist', icon: 'wishlist', badge: 'wishlist' },
+  { label: 'Account', href: '/account', icon: 'account' },
+];
+---
+
+<nav
+  id="mobile-bottom-nav"
+  class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border"
+  aria-label="Mobile navigation"
+>
+  <ul class="grid grid-cols-5">
+    {items.map((item) => (
+      <li>
+        <a
+          href={item.href}
+          data-bottom-nav-item
+          data-badge={item.badge ?? ''}
+          class="relative flex flex-col items-center justify-center gap-1 h-16 text-foreground/50 transition-colors"
+          aria-label={item.label}
+        >
+          <span class="relative">
+            {item.icon === 'home' && (
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l9-8 9 8M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10" />
+              </svg>
+            )}
+            {item.icon === 'shop' && (
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            )}
+            {item.icon === 'search' && (
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            )}
+            {item.icon === 'wishlist' && (
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            )}
+            {item.icon === 'account' && (
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
+
+            <span
+              data-wishlist-badge
+              class="hidden absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[10px] leading-4 text-center"
+            >
+              0
+            </span>
+          </span>
+          <span class="text-[10px] tracking-wider uppercase font-body">{item.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<!-- Reserve space so the fixed bar never covers page content. -->
+<div class="md:hidden h-16" aria-hidden="true"></div>
+
+<style>
+  [data-bottom-nav-item].is-active {
+    color: var(--color-foreground);
+  }
+
+  [data-bottom-nav-item].is-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 2px;
+    background-color: var(--color-foreground);
+  }
+
+  [data-bottom-nav-item] {
+    position: relative;
+  }
+</style>
+
+<script>
+  const nav = document.getElementById('mobile-bottom-nav');
+
+  // Hide the bar on checkout and account screens where it competes with the
+  // primary task (PRD §48 — checkout must stay distraction free).
+  const HIDE_ON = ['/checkout', '/account', '/order/', '/track-order'];
+
+  function applyRouteVisibility(): void {
+    if (!nav) return;
+    const path = window.location.pathname;
+    const hidden = HIDE_ON.some((prefix) => path.startsWith(prefix));
+    nav.classList.toggle('hidden', hidden);
+
+    // Reserve-space spacer sits immediately after the nav.
+    const spacer = nav.nextElementSibling;
+    if (spacer && spacer.getAttribute('aria-hidden') === 'true') {
+      spacer.classList.toggle('hidden', hidden);
+    }
+  }
+
+  // Mark the active tab.
+  function markActive(): void {
+    const path = window.location.pathname;
+    nav?.querySelectorAll<HTMLAnchorElement>('[data-bottom-nav-item]').forEach((link) => {
+      const href = link.getAttribute('href') ?? '';
+      const isActive = href !== '#search' && (href === '/' ? path === '/' : path.startsWith(href));
+      link.classList.toggle('is-active', isActive);
+      if (isActive) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  function updateWishlistBadge(): void {
+    const badge = nav?.querySelector<HTMLElement>('[data-wishlist-badge]');
+    if (!badge) return;
+
+    try {
+      const wishlist = JSON.parse(localStorage.getItem('roquace-wishlist') || '[]');
+      badge.textContent = wishlist.length > 99 ? '99+' : String(wishlist.length);
+      badge.classList.toggle('hidden', wishlist.length === 0);
+    } catch {
+      badge.classList.add('hidden');
+    }
+  }
+
+  // Account tab resolves to /login for guests.
+  function updateAccountTarget(): void {
+    const link = nav?.querySelector<HTMLAnchorElement>('a[href="/account"]');
+    if (!link) return;
+
+    try {
+      const session = JSON.parse(localStorage.getItem('roquace_session') || '{}');
+      link.href = session.loggedIn ? '/account' : '/login';
+    } catch {
+      link.href = '/login';
+    }
+  }
+
+  // Search tab opens the overlay instead of navigating.
+  nav?.querySelector<HTMLAnchorElement>('a[href="#search"]')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    if (typeof (window as any).openSearch === 'function') {
+      (window as any).openSearch();
+    }
+  });
+
+  applyRouteVisibility();
+  markActive();
+  updateWishlistBadge();
+  updateAccountTarget();
+
+  window.addEventListener('wishlist-updated', updateWishlistBadge);
+  window.addEventListener('storage', () => {
+    updateWishlistBadge();
+    updateAccountTarget();
+  });
+</script>

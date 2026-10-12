@@ -1,6 +1,8 @@
 ---
 import { siteConfig } from '../config/site';
 import { mainNavLinks } from '../data/navigation';
+import SearchOverlay from './SearchOverlay.astro';
+import CartDrawer from './CartDrawer.astro';
 ---
 
 <header id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
@@ -38,7 +40,8 @@ import { mainNavLinks } from '../data/navigation';
 
         <!-- Account (placeholder) -->
         <a
-          href="#"
+          href="/account"
+          id="account-link"
           class="p-2 text-foreground/70 hover:text-foreground transition-colors duration-300"
           aria-label="Account"
         >
@@ -47,7 +50,7 @@ import { mainNavLinks } from '../data/navigation';
           </svg>
         </a>
 
-        <!-- Wishlist (placeholder) -->
+        <!-- Wishlist -->
         <button
           id="wishlist-btn"
           class="p-2 text-foreground/70 hover:text-foreground transition-colors duration-300 relative"
@@ -56,7 +59,8 @@ import { mainNavLinks } from '../data/navigation';
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <span id="wishlist-count" class="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+          <!-- The badge is decorative; the count is conveyed by the button's label. -->
+        <span id="wishlist-count" class="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center hidden" aria-hidden="true">0</span>
         </button>
 
         <!-- Cart Button -->
@@ -68,7 +72,7 @@ import { mainNavLinks } from '../data/navigation';
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
-          <span id="cart-count" class="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+          <span id="cart-count" class="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center hidden" aria-hidden="true">0</span>
         </button>
       </div>
 
@@ -83,7 +87,7 @@ import { mainNavLinks } from '../data/navigation';
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
-          <span id="cart-count-mobile" class="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+          <span id="cart-count-mobile" class="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center hidden" aria-hidden="true">0</span>
         </button>
 
         <!-- Mobile Menu Button -->
@@ -125,33 +129,14 @@ import { mainNavLinks } from '../data/navigation';
       </div>
     </div>
   </nav>
+  
+  <!-- Screen reader announcements -->
+  <div aria-live="polite" aria-atomic="true" class="sr-only" id="cart-status-live"></div>
+  <div aria-live="polite" aria-atomic="true" class="sr-only" id="wishlist-status-live"></div>
 </header>
 
-<!-- Search Overlay -->
-<div id="search-overlay" class="fixed inset-0 z-[60] bg-background hidden">
-  <div class="container-custom py-24">
-    <div class="flex items-center justify-between mb-8">
-      <h2 class="heading-md">Search</h2>
-      <button id="search-close" class="p-2" aria-label="Close search">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="relative">
-      <input
-        type="text"
-        id="search-input"
-        placeholder="Search products..."
-        class="w-full px-6 py-5 text-lg border-b-2 border-foreground/20 focus:border-foreground outline-none bg-transparent font-body"
-        autocomplete="off"
-      />
-      <div id="search-results" class="mt-8">
-        <!-- Search results will be populated here -->
-      </div>
-    </div>
-  </div>
-</div>
+<SearchOverlay />
+<CartDrawer />
 
 <script>
   const navbar = document.getElementById('navbar');
@@ -161,13 +146,12 @@ import { mainNavLinks } from '../data/navigation';
   const menuClose = document.getElementById('menu-close');
   const searchBtn = document.getElementById('search-btn');
   const searchBtnMobile = document.getElementById('search-btn-mobile');
-  const searchOverlay = document.getElementById('search-overlay');
-  const searchClose = document.getElementById('search-close');
-  const searchInput = document.getElementById('search-input');
   const cartBtn = document.getElementById('cart-btn');
   const cartBtnMobile = document.getElementById('cart-btn-mobile');
   const cartCount = document.getElementById('cart-count');
   const cartCountMobile = document.getElementById('cart-count-mobile');
+  const wishlistBtn = document.getElementById('wishlist-btn');
+  const wishlistCount = document.getElementById('wishlist-count');
 
   // Transparent navbar on hero, solid when scrolling
   function updateNavbarStyle() {
@@ -205,27 +189,22 @@ import { mainNavLinks } from '../data/navigation';
     menuClose?.classList.toggle('hidden', !isOpen);
   });
 
-  // Search overlay
-  function openSearch() {
-    searchOverlay?.classList.remove('hidden');
-    searchInput?.focus();
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeSearch() {
-    searchOverlay?.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
-
-  searchBtn?.addEventListener('click', openSearch);
-  searchBtnMobile?.addEventListener('click', openSearch);
-  searchClose?.addEventListener('click', closeSearch);
-
-  // Close search on Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !searchOverlay?.classList.contains('hidden')) {
-      closeSearch();
+  // Search overlay - use global function from SearchOverlay component
+  searchBtn?.addEventListener('click', () => {
+    if (typeof (window as any).openSearch === 'function') {
+      (window as any).openSearch();
     }
+  });
+
+  searchBtnMobile?.addEventListener('click', () => {
+    if (typeof (window as any).openSearch === 'function') {
+      (window as any).openSearch();
+    }
+  });
+
+  // Wishlist button - navigate to wishlist page
+  wishlistBtn?.addEventListener('click', () => {
+    window.location.href = '/wishlist';
   });
 
   // Update cart count from localStorage
@@ -233,15 +212,61 @@ import { mainNavLinks } from '../data/navigation';
     try {
       const cart = JSON.parse(localStorage.getItem('roquace_cart') || '[]');
       const count = cart.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
-      
+      const label = count > 99 ? '99+' : String(count);
+
       if (count > 0) {
         cartCount?.classList.remove('hidden');
         cartCountMobile?.classList.remove('hidden');
-        if (cartCount) cartCount.textContent = count > 99 ? '99+' : String(count);
-        if (cartCountMobile) cartCountMobile.textContent = count > 99 ? '99+' : String(count);
+        if (cartCount) cartCount.textContent = label;
+        if (cartCountMobile) cartCountMobile.textContent = label;
       } else {
         cartCount?.classList.add('hidden');
         cartCountMobile?.classList.add('hidden');
+      }
+
+      // The badge itself is aria-hidden, so the count has to be in the label.
+      const cartBtn = document.getElementById('cart-btn');
+      if (cartBtn) {
+        cartBtn.setAttribute('aria-label', count > 0 ? `Cart, ${count} item${count !== 1 ? 's' : ''}` : 'Cart, empty');
+      }
+      
+      // Announce to screen readers
+      const liveRegion = document.getElementById('cart-status-live');
+      if (liveRegion && count > 0) {
+        liveRegion.textContent = `Cart updated. ${count} item${count !== 1 ? 's' : ''} in cart.`;
+        setTimeout(() => { liveRegion.textContent = ''; }, 1000);
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  // Update wishlist count from localStorage
+  function updateWishlistCount() {
+    try {
+      const wishlist = JSON.parse(localStorage.getItem('roquace-wishlist') || '[]');
+      const count = wishlist.length;
+
+      if (count > 0) {
+        wishlistCount?.classList.remove('hidden');
+        if (wishlistCount) wishlistCount.textContent = count > 99 ? '99+' : String(count);
+      } else {
+        wishlistCount?.classList.add('hidden');
+      }
+
+      const wishlistBtn = document.getElementById('wishlist-btn');
+      if (wishlistBtn) {
+        wishlistBtn.setAttribute(
+          'aria-label',
+          count > 0 ? `Wishlist, ${count} item${count !== 1 ? 's' : ''}` : 'Wishlist, empty'
+        );
+      }
+      
+      // Announce to screen readers
+      const liveRegion = document.getElementById('wishlist-status-live');
+      if (liveRegion && count > 0) {
+        liveRegion.textContent = `Wishlist updated. ${count} item${count !== 1 ? 's' : ''} saved.`;
+        setTimeout(() => { liveRegion.textContent = ''; }, 1000);
       }
     } catch {
       // Ignore errors
@@ -250,8 +275,32 @@ import { mainNavLinks } from '../data/navigation';
 
   // Update on load and storage changes
   updateCartCount();
-  window.addEventListener('storage', updateCartCount);
+  updateWishlistCount();
+  updateAccountLink();
+  window.addEventListener('storage', () => {
+    updateCartCount();
+    updateWishlistCount();
+    updateAccountLink();
+  });
   
-  // Custom event for cart updates
+  // Custom events for updates
   window.addEventListener('cart-updated', updateCartCount);
+  window.addEventListener('wishlist-updated', updateWishlistCount);
+
+  // Update account link based on login status
+  function updateAccountLink() {
+    const accountLink = document.getElementById('account-link');
+    if (!accountLink) return;
+
+    try {
+      const session = JSON.parse(localStorage.getItem('roquace_session') || '{}');
+      if (session.loggedIn) {
+        accountLink.href = '/account';
+      } else {
+        accountLink.href = '/login';
+      }
+    } catch (e) {
+      accountLink.href = '/login';
+    }
+  }
 </script>

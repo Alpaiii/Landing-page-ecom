@@ -1,0 +1,134 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Terms & Conditions';
+const description = 'Terms governing the use of our website and services';
+---
+
+<Layout title={title} description={description}>
+  <AnnouncementBar />
+  <Navbar />
+
+  <main id="main-content" class="pt-32 md:pt-36">
+    <section class="section-padding">
+      <div class="container-custom max-w-4xl">
+        <div class="mb-12">
+          <h1 class="text-3xl md:text-4xl font-heading mb-4">Terms & Conditions</h1>
+          <p class="text-foreground/60 font-body">Last updated: October 7, 2026</p>
+        </div>
+
+        <div class="space-y-8 font-body text-foreground/80 leading-relaxed">
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">1. Acceptance of Terms</h2>
+            <p>By accessing and using this website, you agree to comply with these Terms & Conditions. If you do not agree, please discontinue use of this site.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">2. Account Registration</h2>
+            <p class="mb-4">To place orders, you must:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Be at least 18 years old</li>
+              <li>Provide accurate and complete information</li>
+              <li>Maintain the security of your account credentials</li>
+              <li>Notify us immediately of any unauthorized use</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">3. Product Information</h2>
+            <p class="mb-4">We strive to provide accurate product information including:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Descriptions, dimensions, and materials</li>
+              <li>Color representations (subject to screen variations)</li>
+              <li>Pricing in Indonesian Rupiah (IDR)</li>
+            </ul>
+            <p class="mt-4">Products are subject to availability. We reserve the right to limit quantities or discontinue items without notice.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">4. Pricing and Payment</h2>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+              <li>All prices include applicable taxes</li>
+              <li>Payment must be completed within the specified time frame</li>
+              <li>We accept QRIS, bank transfer, e-wallet, credit/debit cards, and cash on delivery</li>
+              <li>Orders are confirmed only after payment verification</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">5. Shipping</h2>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+              <li>Free shipping on orders over Rp500.000</li>
+              <li>Standard delivery: 3-5 business days</li>
+              <li>Express delivery: 1-2 business days</li>
+              <li>Same day delivery available in selected areas (order before 12:00 PM)</li>
+            </ul>
+            <p>Delivery times are estimates and may vary due to external factors beyond our control.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">6. Returns and Refunds</h2>
+            <p class="mb-4">We accept returns within 7 days of delivery provided that:</p>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+              <li>Items are unworn, unwashed, and in original condition</li>
+              <li>Original tags and packaging are intact</li>
+              <li>Proof of purchase is provided</li>
+            </ul>
+            <p class="mb-4">Items that cannot be returned include:</p>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+              <li>Final sale items (clearly marked)</li>
+              <li>Items with removed tags</li>
+              <li>Products showing signs of wear or damage</li>
+            </ul>
+            <p>Refunds are processed within 7-14 business days to the original payment method.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">7. Intellectual Property</h2>
+            <p class="mb-4">All content on this website including:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Text, images, and graphics</li>
+              <li>Logo and brand elements</li>
+              <li>Website design and layout</li>
+              <li>Product photography</li>
+            </ul>
+            <p class="mt-4">are owned by Roquace and protected by intellectual property laws. Reproduction without permission is prohibited.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">8. Limitation of Liability</h2>
+            <p>Roquace is not liable for any indirect, incidental, special, or consequential damages arising from your use of this website or products purchased through it.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">9. Governing Law</h2>
+            <p>These Terms & Conditions are governed by and construed in accordance with the laws of the Republic of Indonesia.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">10. Changes to Terms</h2>
+            <p>We reserve the right to modify these terms at any time. Continued use of the website after changes constitutes acceptance of the updated terms.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-heading text-foreground mb-4">11. Contact</h2>
+            <p>For questions regarding these terms, contact us at:</p>
+            <div class="pl-6 mt-2">
+              <p>Email: legal@roquace.com</p>
+              <p>Phone: +62 812 3456 7890</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="mt-12 pt-12 border-t border-border">
+          <a href="/" class="text-sm font-body underline hover:no-underline">← Back to home</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
