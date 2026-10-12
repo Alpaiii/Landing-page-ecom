@@ -221,7 +221,7 @@ try {
 </section>
 
 <script define:vars={{ productId }}>
-  const API_URL = 'http://localhost:4000';
+  const API_URL = import.meta.env.PUBLIC_SUPABASE_URL || 'https://exdyvmwvzqdncfxdljtt.supabase.co';
 
   // Star rating
   let selectedRating = 0;

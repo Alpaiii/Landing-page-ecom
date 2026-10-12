@@ -434,7 +434,7 @@ const description = 'Complete your purchase';
       const token = localStorage.getItem('customer_token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:4000/api/customers/addresses', {
+      const response = await fetch(`${import.meta.env.PUBLIC_SUPABASE_URL || 'https://exdyvmwvzqdncfxdljtt.supabase.co'}/rest/v1/customers/addresses`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -723,7 +723,7 @@ const description = 'Complete your purchase';
     try {
       const token = localStorage.getItem('customer_token');
       if (token) {
-        const response = await fetch('http://localhost:4000/api/customers/customer-verify', {
+        const response = await fetch(`${import.meta.env.PUBLIC_SUPABASE_URL || 'https://exdyvmwvzqdncfxdljtt.supabase.co'}/rest/v1/customers/customer-verify`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -775,7 +775,7 @@ const description = 'Complete your purchase';
       if (submitBtn) submitBtn.setAttribute('disabled', 'true');
 
       // Submit to API
-      const response = await fetch('http://localhost:4000/api/orders', {
+      const response = await fetch(`${import.meta.env.PUBLIC_SUPABASE_URL || 'https://exdyvmwvzqdncfxdljtt.supabase.co'}/rest/v1/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
