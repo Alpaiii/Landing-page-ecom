@@ -60,7 +60,7 @@ const title = 'Admin Login';
 </Layout>
 
 <script>
-  import { signInAdmin } from '../../lib/adminAuth';
+  const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
 
   const form = document.getElementById('login-form') as HTMLFormElement;
   const emailInput = document.getElementById('email') as HTMLInputElement;
@@ -83,7 +83,23 @@ const title = 'Admin Login';
     submitBtn.textContent = 'Signing in...';
     
     try {
-      await signInAdmin(email, password);
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Login failed');
+      }
+
+      const result = await response.json();
+      
+      // Save token to localStorage
+      localStorage.setItem('admin_token', result.token);
       
       // Redirect to admin dashboard
       window.location.href = '/admin';
