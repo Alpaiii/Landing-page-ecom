@@ -43,14 +43,8 @@ app.use('/api/search', searchRouter);
 // Serve uploaded files
 app.use('/uploads', express.static(join(__dirname, '../../public/uploads')));
 
-// Health check. Registered before the SPA fallback so it is reachable: a
-// browser navigating to `/` sends Accept: text/html and gets the built
-// homepage, while a health probe gets the JSON status.
-app.get('/', (req: Request, res: Response) => {
-  if (req.headers.accept?.includes('text/html')) {
-    return res.sendFile(join(distPath, 'index.html'));
-  }
-
+// Health check endpoint for monitoring
+app.get('/health', (req: Request, res: Response) => {
   res.json({
     message: 'Roquace API',
     version: '1.0.0',
@@ -66,6 +60,11 @@ app.get('/', (req: Request, res: Response) => {
       upload: '/api/upload'
     }
   });
+});
+
+// Root path - always serve frontend HTML
+app.get('/', (req: Request, res: Response) => {
+  res.sendFile(join(distPath, 'index.html'));
 });
 
 // Serve Astro frontend build
