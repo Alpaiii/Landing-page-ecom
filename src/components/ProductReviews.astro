@@ -5,7 +5,7 @@ interface Props {
 
 const { productId } = Astro.props;
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
 
 // Fetch reviews from API
 let reviews: any[] = [];
@@ -221,7 +221,7 @@ try {
 </section>
 
 <script define:vars={{ productId }}>
-  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:4000';
+  const API_URL = import.meta.env.PUBLIC_API_URL || '';
 
   // Star rating
   let selectedRating = 0;

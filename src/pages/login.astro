@@ -156,8 +156,8 @@ const description = 'Sign in to your account';
     return emailRegex.test(email);
   }
 
-  // API configuration
-  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:4000';
+  // API configuration - use relative URL since frontend and API are on same origin
+  const API_URL = import.meta.env.PUBLIC_API_URL || '';
 
   function showError(message: string) {
     if (loginError) {
