@@ -3,24 +3,40 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"astro dev\" \"cd server && npm run dev\"",
+    "dev": "concurrently \"astro dev\" \"tsx watch server/src/index.ts\"",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "astro build",
-    "build:backend": "cd server && npm run build",
-    "start": "cd server && npm start",
-    "railway": "npm run build && cd server && npm run migrate && npm run seed && npm start",
-    "migrate": "cd server && npm run migrate",
-    "seed": "cd server && npm run seed"
+    "build:backend": "tsc -p server/tsconfig.json",
+    "start": "node server/dist/index.js",
+    "migrate": "node server/scripts/migrate.js",
+    "seed": "node server/scripts/seed.js",
+    "railway": "npm run build && npm run migrate && npm run seed && npm start"
   },
   "dependencies": {
     "@astrojs/tailwind": "^6.0.2",
-    "@supabase/supabase-js": "^2.117.3",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^26.6.4",
+    "@types/pg": "^8.15.0",
     "astro": "^5.7.10",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "lucide": "^0.469.0",
+    "multer": "^2.4.0",
+    "pg": "^8.15.0",
     "sharp": "^0.33.5",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.14"
   }
 }
