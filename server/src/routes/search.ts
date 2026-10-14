@@ -139,14 +139,14 @@ router.get('/suggestions', async (req: Request, res: Response) => {
     );
 
     const suggestions = [
-      ...productsResult.rows.map(p => ({
+      ...productsResult.rows.map((p: any) => ({
         type: 'product',
         label: p.name,
         value: p.name,
         slug: p.slug,
         category: p.category
       })),
-      ...categoriesResult.rows.map(c => ({
+      ...categoriesResult.rows.map((c: any) => ({
         type: 'category',
         label: c.name,
         value: c.name,

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import pool from '../config/database';
 import { authenticateAdmin } from '../middleware/auth';
 
@@ -13,7 +14,6 @@ const authenticateCustomer = async (req: any, res: Response, next: any) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
     req.customer = decoded;
     next();
@@ -51,7 +51,7 @@ router.get('/product/:productId', async (req: Request, res: Response) => {
       [productId]
     );
 
-    const stats = statsResult.rows;
+    const stats: Array<{ rating: number }> = statsResult.rows;
     const totalReviews = stats.length;
     const averageRating = totalReviews > 0
       ? stats.reduce((sum, r) => sum + r.rating, 0) / totalReviews

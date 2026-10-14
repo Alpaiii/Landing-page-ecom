@@ -1,6 +1,19 @@
 import type { Product } from '../data/products';
+import { products as staticProducts } from '../data/products';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
+
+/**
+ * Resolve an API path to an absolute URL.
+ *
+ * Pages render at build time (SSG), where `fetch` receives a relative path and
+ * Node rejects it with ERR_INVALID_URL. On the server we fall back to the local
+ * static dataset; in the browser the same-origin relative path is valid.
+ */
+function apiUrl(path: string): string {
+  if (typeof window !== 'undefined') return `${API_URL}${path}`;
+  return new URL(`${API_URL}${path}`, import.meta.env.SITE ?? 'http://localhost:4321').toString();
+}
 
 // Map database product to frontend Product type
 export function mapApiProduct(apiProduct: any): Product {
@@ -83,23 +96,33 @@ function getColorHex(colorName: string): string {
   return colorMap[colorName] || '#CCCCCC';
 }
 
+/**
+ * True while Astro renders pages at build time. The Express API is not running
+ * during the build, so those calls must not be attempted.
+ */
+const isBuild = typeof window === 'undefined';
+
 // Fetch products from API
 export async function fetchProducts(): Promise<Product[]> {
+  if (isBuild) return staticProducts;
+
   try {
-    const response = await fetch(`${API_URL}/products`);
+    const response = await fetch(apiUrl('/products'));
     if (!response.ok) throw new Error('Failed to fetch products');
     const result = await response.json();
     return (result.data || []).map(mapApiProduct);
   } catch (error) {
     console.error('Error fetching products:', error);
-    return [];
+    return staticProducts;
   }
 }
 
 // Fetch single product by slug
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
+  if (isBuild) return staticProducts.find(p => p.slug === slug) ?? null;
+
   try {
-    const response = await fetch(`${API_URL}/products/slug/${slug}`);
+    const response = await fetch(apiUrl(`/products/slug/${encodeURIComponent(slug)}`));
     if (!response.ok) return null;
     const result = await response.json();
     return result.data ? mapApiProduct(result.data) : null;
@@ -111,8 +134,12 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
 
 // Fetch products by category
 export async function fetchProductsByCategory(category: string): Promise<Product[]> {
+  if (isBuild) {
+    return staticProducts.filter(p => p.category === category);
+  }
+
   try {
-    const response = await fetch(`${API_URL}/products?category=${encodeURIComponent(category)}`);
+    const response = await fetch(apiUrl(`/products?category=${encodeURIComponent(category)}`));
     if (!response.ok) return [];
     const result = await response.json();
     return (result.data || []).map(mapApiProduct);
@@ -124,8 +151,18 @@ export async function fetchProductsByCategory(category: string): Promise<Product
 
 // Search products
 export async function searchProducts(query: string): Promise<Product[]> {
+  if (isBuild) {
+    const term = query.toLowerCase();
+    return staticProducts.filter(
+      p =>
+        p.name.toLowerCase().includes(term) ||
+        p.description.toLowerCase().includes(term) ||
+        p.tags?.some(t => t.toLowerCase().includes(term))
+    );
+  }
+
   try {
-    const response = await fetch(`${API_URL}/search/products?q=${encodeURIComponent(query)}`);
+    const response = await fetch(apiUrl(`/search/products?q=${encodeURIComponent(query)}`));
     if (!response.ok) return [];
     const result = await response.json();
     return (result.data || []).map(mapApiProduct);
