@@ -1,14 +1,12 @@
 import { defineRailway, github, preserve, project, service } from "railway/iac";
-// This repository manages only its own resources in the environment. Other
-// repositories export their own partial name.
-// See https://docs.railway.com/infrastructure-as-code#multi-repo-projects
+
 export const partial = "Landing-page-ecom";
+
 export default defineRailway(() => {
   const LandingPageEcom = service("Landing-page-ecom", {
-    // builder from CaC: "NIXPACKS"
     source: github("Alpaiii/Landing-page-ecom", { branch: "main", checkSuites: false }),
     build: "npm ci && npm run build",
-    start: "npm run migrate && npm run seed && npm start",
+    start: "node server/scripts/migrate.js && node server/scripts/seed.js && node server/dist/index.js",
     healthcheck: "/",
     healthcheckTimeout: 300,
     replicas: { "iad": 1 },
