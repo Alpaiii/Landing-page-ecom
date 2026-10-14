@@ -127,7 +127,6 @@
 
 <script>
   import { trapFocus } from '../utils/focusTrap';
-  import { supabase } from '../lib/supabase';
 
   const searchOverlay = document.getElementById('search-overlay');
   const searchBackdrop = document.getElementById('search-backdrop');
@@ -141,6 +140,8 @@
   const viewAllLink = document.getElementById('view-all-link');
   const noResultsQuery = document.getElementById('no-results-query');
   const popularProducts = document.getElementById('popular-products');
+
+  const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
 
   let searchTimeout: number;
   let releaseFocusTrap: (() => void) | null = null;
@@ -196,23 +197,17 @@
     noResults?.classList.add('hidden');
   }
 
-  // Load popular products from Supabase
+  // Load popular products from API
   async function loadPopularProducts() {
     if (!popularProducts) return;
 
     try {
-      const { data: products, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_featured', true)
-        .limit(4);
+      const response = await fetch(`${API_URL}/products?is_featured=true&limit=4`);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const result = await response.json();
+      const products = result.data || [];
 
-      if (error) {
-        console.error('Error loading popular products:', error);
-        return;
-      }
-
-      popularProducts.innerHTML = (products || [])
+      popularProducts.innerHTML = products
         .map(
           (product: any) => `
           <a href="/products/${escapeHTML(product.slug)}" class="search-result-card">
@@ -227,7 +222,7 @@
     }
   }
 
-  // Search products via Supabase
+  // Search products via API
   async function searchProducts(query: string) {
     if (!query.trim()) {
       showDefault();
@@ -235,19 +230,12 @@
     }
 
     try {
-      const { data: products, error } = await supabase
-        .from('products')
-        .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-        .limit(8);
-      
-      if (error) {
-        console.error('Search error:', error);
-        showNoResults(query);
-        return;
-      }
+      const response = await fetch(`${API_URL}/search/products?q=${encodeURIComponent(query)}&limit=8`);
+      if (!response.ok) throw new Error('Search failed');
+      const result = await response.json();
+      const products = result.data || [];
 
-      if (!products || products.length === 0) {
+      if (products.length === 0) {
         showNoResults(query);
         return;
       }
