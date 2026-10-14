@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { authenticateAdmin } from '../middleware/auth';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = Router();
 const __filename = fileURLToPath(import.meta.url);

@@ -19,6 +19,7 @@ dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 8000;
+const distPath = join(__dirname, '../../dist');
 
 // Middleware
 app.use(cors({
@@ -41,23 +42,14 @@ app.use('/api/search', searchRouter);
 // Serve uploaded files
 app.use('/uploads', express.static(join(__dirname, '../../public/uploads')));
 
-// Serve Astro frontend build
-const distPath = join(__dirname, '../../dist');
-app.use(express.static(distPath));
-
-// SPA fallback - serve index.html for all non-API routes
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(join(distPath, 'index.html'));
-});
-
-// Health check
+// Health check. Registered before the SPA fallback so it is reachable: a
+// browser navigating to `/` sends Accept: text/html and gets the built
+// homepage, while a health probe gets the JSON status.
 app.get('/', (req: Request, res: Response) => {
-  // If request accepts HTML, serve frontend
   if (req.headers.accept?.includes('text/html')) {
     return res.sendFile(join(distPath, 'index.html'));
   }
-  
-  // Otherwise return API info
+
   res.json({
     message: 'Roquace API',
     version: '1.0.0',
@@ -75,9 +67,18 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-// 404 handler for API routes
+// Serve Astro frontend build
+app.use(express.static(distPath));
+
+// API 404. Registered before the SPA fallback so an unmatched /api path
+// returns JSON instead of being swallowed by the frontend shell.
 app.use('/api', (req: Request, res: Response) => {
   res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// SPA fallback. Express 5 dropped bare '*' in favour of a named wildcard.
+app.get('/*splat', (req: Request, res: Response) => {
+  res.sendFile(join(distPath, 'index.html'));
 });
 
 // Error handling
