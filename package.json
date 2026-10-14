@@ -8,7 +8,8 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "astro build",
     "build:server": "cd server && npm run build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "preview:host": "astro preview --host 0.0.0.0 --port $PORT"
   },
   "dependencies": {
     "@astrojs/tailwind": "^6.0.2",

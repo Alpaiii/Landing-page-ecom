@@ -157,7 +157,7 @@ const description = 'Sign in to your account';
   }
 
   // API configuration
-  const API_URL = import.meta.env.PUBLIC_SUPABASE_URL || 'https://exdyvmwvzqdncfxdljtt.supabase.co';
+  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:4000';
 
   function showError(message: string) {
     if (loginError) {

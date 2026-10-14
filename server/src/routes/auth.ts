@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { supabase } from '../config/supabase';
+import pool from '../config/database';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
@@ -15,19 +15,18 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
-    // Get admin from database
-    const { data: admin, error } = await supabase
-      .from('admins')
-      .select('*')
-      .eq('email', email)
-      .single();
+    const result = await pool.query(
+      'SELECT * FROM admins WHERE email = $1',
+      [email]
+    );
 
-    if (error || !admin) {
+    const admin = result.rows[0];
+
+    if (!admin) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
 
-    // Verify password
     const validPassword = await bcrypt.compare(password, admin.password_hash);
 
     if (!validPassword) {
@@ -35,7 +34,6 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
-    // Generate JWT
     const token = jwt.sign(
       { adminId: admin.id, email: admin.email },
       process.env.JWT_SECRET!,

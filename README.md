@@ -15,21 +15,37 @@ Landing Page Astro/
 │   │   ├── config/
 │   │   ├── middleware/
 │   │   └── routes/
+│   ├── scripts/
 │   └── database/
 ├── public/
-└── package.json
+├── railway.json            # Backend Railway config
+├── railway.frontend.json   # Frontend Railway config
+└── .github/workflows/      # CI/CD pipelines
 ```
 
-## Setup
+## Tech Stack
+
+**Frontend:**
+- Astro
+- Tailwind CSS
+- TypeScript
+
+**Backend:**
+- Express.js
+- PostgreSQL (Railway)
+- JWT Authentication
+- TypeScript
+
+## Local Development
 
 ### 1. Install Dependencies
 
-**Root (Frontend)**:
+**Root (Frontend):**
 ```bash
 npm install
 ```
 
-**Backend**:
+**Backend:**
 ```bash
 cd server
 npm install
@@ -40,29 +56,30 @@ npm install
 Edit `server/.env`:
 
 ```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
-JWT_SECRET=your-random-secret
+DATABASE_URL=postgresql://postgres:password@localhost:5432/railway
 PORT=4000
+NODE_ENV=development
+JWT_SECRET=your-secret-key
 CORS_ORIGIN=http://localhost:4321
 ```
 
 ### 3. Setup Database
 
-1. Buka [Supabase Dashboard](https://supabase.com/dashboard)
-2. Buat project baru
-3. SQL Editor → execute `server/database/schema.sql`
-4. SQL Editor → execute `server/database/seed.sql`
+```bash
+cd server
+npm run migrate
+npm run seed
+```
 
 ### 4. Run Development
 
-**Run both (Frontend + Backend)**:
+**Run both (Frontend + Backend):**
 ```bash
 npm run dev:all
 ```
 
-**Or run separately**:
+**Or run separately:**
+
 ```bash
 # Terminal 1 - Frontend
 npm run dev
@@ -73,6 +90,24 @@ npm run dev:server
 
 - Frontend: http://localhost:4321
 - Backend API: http://localhost:4000
+
+## Railway Deployment
+
+### Quick Deploy
+
+1. **Push to GitHub**
+2. **Setup Railway:**
+   - Create new project from GitHub repo
+   - Add PostgreSQL database
+   - Deploy backend service (root: `server/`)
+   - Deploy frontend service (root: `./`)
+3. **Set Environment Variables:**
+   - Backend: `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN`
+   - Frontend: `PUBLIC_API_URL`
+
+### Auto-Deploy
+
+Push ke `main` branch akan trigger auto-deploy via GitHub Actions.
 
 ## API Endpoints
 
@@ -87,25 +122,34 @@ npm run dev:server
 - `PUT /api/products/:id` - Update product (admin)
 - `DELETE /api/products/:id` - Delete product (admin)
 
-## Default Admin
+### Customers
+- `POST /api/customers/register` - Customer register
+- `POST /api/customers/customer-login` - Customer login
+- `GET /api/customers/orders` - Get customer orders
+- `GET /api/customers/addresses` - Get customer addresses
 
-```
-Email: admin@roquace.com
-Password: admin123
-```
+### Orders
+- `POST /api/orders` - Create order
+- `GET /api/orders/track/:id` - Track order
 
-## Tech Stack
+### Coupons
+- `POST /api/coupons/validate` - Validate coupon
+- `GET /api/coupons/active` - Get active coupons
 
-**Frontend**:
-- Astro
-- Tailwind CSS
-- TypeScript
+### Reviews
+- `GET /api/reviews/product/:productId` - Get product reviews
+- `POST /api/reviews` - Create review
 
-**Backend**:
-- Express.js
-- Supabase (PostgreSQL)
-- JWT Authentication
-- TypeScript
+### Search
+- `GET /api/search/products` - Search products
+- `GET /api/search/suggestions` - Search suggestions
+
+## Default Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@roquace.com` | `admin123` |
+| Customer | `john@example.com` | `password123` |
 
 ## Scripts
 
@@ -114,3 +158,8 @@ Password: admin123
 - `npm run dev:all` - Run both concurrently
 - `npm run build` - Build frontend
 - `npm run build:server` - Build backend
+- `npm run preview` - Preview frontend build
+
+## License
+
+MIT

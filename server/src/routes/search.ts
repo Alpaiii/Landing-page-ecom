@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { supabase } from '../config/supabase';
+import pool from '../config/database';
 
 const router = Router();
 
@@ -19,79 +19,96 @@ router.get('/products', async (req: Request, res: Response) => {
       offset = 0
     } = req.query;
 
-    let query = supabase
-      .from('products')
-      .select('*');
+    let whereConditions = [];
+    let params: any[] = [];
+    let paramIndex = 1;
 
-    // Text search
-    if (q && q.trim()) {
+    if (q && typeof q === 'string' && q.trim()) {
       const searchTerm = q.trim();
-      query = query.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,tags.cs.{${searchTerm}}`);
+      whereConditions.push(`(
+        name ILIKE $${paramIndex} OR 
+        description ILIKE $${paramIndex} OR 
+        tags::text ILIKE $${paramIndex}
+      )`);
+      params.push(`%${searchTerm}%`);
+      paramIndex++;
     }
 
-    // Filters
     if (category) {
-      query = query.eq('category', category);
+      whereConditions.push(`category = $${paramIndex}`);
+      params.push(category);
+      paramIndex++;
     }
 
     if (min_price) {
-      query = query.gte('price', Number(min_price));
+      whereConditions.push(`price >= $${paramIndex}`);
+      params.push(Number(min_price));
+      paramIndex++;
     }
 
     if (max_price) {
-      query = query.lte('price', Number(max_price));
+      whereConditions.push(`price <= $${paramIndex}`);
+      params.push(Number(max_price));
+      paramIndex++;
     }
 
     if (in_stock === 'true') {
-      query = query.gt('stock', 0);
+      whereConditions.push('stock > 0');
     }
 
     if (is_featured === 'true') {
-      query = query.eq('is_featured', true);
+      whereConditions.push('is_featured = true');
     }
 
     if (is_new === 'true') {
-      query = query.eq('is_new', true);
+      whereConditions.push('is_new = true');
     }
 
-    // Sorting
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    let orderBy = 'created_at DESC';
     switch (sort) {
       case 'newest':
-        query = query.order('created_at', { ascending: false });
+        orderBy = 'created_at DESC';
         break;
       case 'price_asc':
-        query = query.order('price', { ascending: true });
+        orderBy = 'price ASC';
         break;
       case 'price_desc':
-        query = query.order('price', { ascending: false });
+        orderBy = 'price DESC';
         break;
       case 'featured':
-        query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+        orderBy = 'is_featured DESC, created_at DESC';
         break;
       case 'rating':
-        query = query.order('is_featured', { ascending: false }).order('is_new', { ascending: false });
+        orderBy = 'is_featured DESC, is_new DESC';
         break;
       default:
-        // relevance - exact matches first, then created_at desc
-        query = query.order('created_at', { ascending: false });
+        orderBy = 'created_at DESC';
     }
 
-    // Pagination
     const limitNum = Math.min(Number(limit), 50);
     const offsetNum = Number(offset);
-    query = query.range(offsetNum, offsetNum + limitNum - 1);
 
-    const { data: products, error, count } = await query;
+    params.push(limitNum, offsetNum);
 
-    if (error) throw error;
+    const result = await pool.query(
+      `SELECT * FROM products ${whereClause} ORDER BY ${orderBy} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      params
+    );
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM products ${whereClause}`,
+      params.slice(0, -2)
+    );
 
     res.json({ 
       success: true, 
-      data: products || [],
+      data: result.rows,
       pagination: {
         limit: limitNum,
         offset: offsetNum,
-        total: count || 0
+        total: parseInt(countResult.rows[0].count)
       }
     });
   } catch (error: any) {
@@ -105,35 +122,31 @@ router.get('/suggestions', async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
 
-    if (!q || q.length < 2) {
+    if (!q || typeof q !== 'string' || q.length < 2) {
       return res.json({ success: true, data: [] });
     }
 
     const searchTerm = q.trim();
 
-    // Search in products
-    const { data: products } = await supabase
-      .from('products')
-      .select('name, slug, category')
-      .ilike('name', `%${searchTerm}%`)
-      .limit(5);
+    const productsResult = await pool.query(
+      'SELECT name, slug, category FROM products WHERE name ILIKE $1 LIMIT 5',
+      [`%${searchTerm}%`]
+    );
 
-    // Search in categories
-    const { data: categories } = await supabase
-      .from('categories')
-      .select('name, slug')
-      .ilike('name', `%${searchTerm}%`)
-      .limit(3);
+    const categoriesResult = await pool.query(
+      'SELECT name, slug FROM categories WHERE name ILIKE $1 LIMIT 3',
+      [`%${searchTerm}%`]
+    );
 
     const suggestions = [
-      ...(products || []).map(p => ({
+      ...productsResult.rows.map(p => ({
         type: 'product',
         label: p.name,
         value: p.name,
         slug: p.slug,
         category: p.category
       })),
-      ...(categories || []).map(c => ({
+      ...categoriesResult.rows.map(c => ({
         type: 'category',
         label: c.name,
         value: c.name,

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { supabase } from '../config/supabase';
+import pool from '../config/database';
 import { authenticateAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -28,54 +28,46 @@ router.get('/product/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
     const { sort = 'recent', limit = 10, offset = 0 } = req.query;
 
-    let query = supabase
-      .from('reviews')
-      .select('*')
-      .eq('product_id', productId)
-      .eq('is_approved', true);
-
-    // Sort
-    if (sort === 'recent') {
-      query = query.order('created_at', { ascending: false });
-    } else if (sort === 'highest') {
-      query = query.order('rating', { ascending: false });
+    let orderBy = 'created_at DESC';
+    if (sort === 'highest') {
+      orderBy = 'rating DESC';
     } else if (sort === 'lowest') {
-      query = query.order('rating', { ascending: true });
+      orderBy = 'rating ASC';
     } else if (sort === 'helpful') {
-      query = query.order('helpful_count', { ascending: false });
+      orderBy = 'helpful_count DESC';
     }
 
-    // Pagination
-    query = query.range(Number(offset), Number(offset) + Number(limit) - 1);
-
-    const { data: reviews, error } = await query;
-
-    if (error) throw error;
+    const result = await pool.query(
+      `SELECT * FROM reviews 
+       WHERE product_id = $1 AND is_approved = true
+       ORDER BY ${orderBy}
+       LIMIT $2 OFFSET $3`,
+      [productId, Number(limit), Number(offset)]
+    );
 
     // Get review stats
-    const { data: stats } = await supabase
-      .from('reviews')
-      .select('rating')
-      .eq('product_id', productId)
-      .eq('is_approved', true);
+    const statsResult = await pool.query(
+      'SELECT rating FROM reviews WHERE product_id = $1 AND is_approved = true',
+      [productId]
+    );
 
-    const totalReviews = stats?.length || 0;
+    const stats = statsResult.rows;
+    const totalReviews = stats.length;
     const averageRating = totalReviews > 0
-      ? stats!.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      ? stats.reduce((sum, r) => sum + r.rating, 0) / totalReviews
       : 0;
 
-    // Rating breakdown
     const ratingCounts = [5, 4, 3, 2, 1].map(rating => ({
       rating,
-      count: stats?.filter(r => r.rating === rating).length || 0,
+      count: stats.filter(r => r.rating === rating).length,
       percentage: totalReviews > 0
-        ? Math.round((stats!.filter(r => r.rating === rating).length / totalReviews) * 100)
+        ? Math.round((stats.filter(r => r.rating === rating).length / totalReviews) * 100)
         : 0
     }));
 
     res.json({
       success: true,
-      data: reviews || [],
+      data: result.rows,
       stats: {
         total: totalReviews,
         average: Math.round(averageRating * 10) / 10,
@@ -103,71 +95,56 @@ router.post('/', authenticateCustomer, async (req: any, res: Response) => {
     }
 
     // Get customer info
-    const { data: customer } = await supabase
-      .from('customers')
-      .select('name')
-      .eq('id', customerId)
-      .single();
+    const customerResult = await pool.query(
+      'SELECT name FROM customers WHERE id = $1',
+      [customerId]
+    );
 
-    if (!customer) {
+    if (customerResult.rows.length === 0) {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
-    // Check if customer already reviewed this product
-    const { data: existing } = await supabase
-      .from('reviews')
-      .select('id')
-      .eq('product_id', product_id)
-      .eq('customer_id', customerId)
-      .single();
+    // Check if already reviewed
+    const existingResult = await pool.query(
+      'SELECT id FROM reviews WHERE product_id = $1 AND customer_id = $2',
+      [product_id, customerId]
+    );
 
-    if (existing) {
+    if (existingResult.rows.length > 0) {
       return res.status(400).json({ error: 'You have already reviewed this product' });
     }
 
-    // Check if customer purchased this product (if order_id provided)
+    // Check if verified purchase
     let isVerified = false;
     if (order_id) {
-      const { data: order } = await supabase
-        .from('orders')
-        .select('items')
-        .eq('id', order_id)
-        .eq('customer_id', customerId)
-        .single();
+      const orderResult = await pool.query(
+        'SELECT items FROM orders WHERE id = $1 AND customer_id = $2',
+        [order_id, customerId]
+      );
 
-      if (order && order.items) {
-        const items = order.items as any[];
-        isVerified = items.some(item => item.product_id === product_id);
+      if (orderResult.rows.length > 0) {
+        const items = orderResult.rows[0].items;
+        if (Array.isArray(items)) {
+          isVerified = items.some((item: any) => item.product_id === product_id);
+        }
       }
     }
 
-    // Create review
-    const { data: review, error } = await supabase
-      .from('reviews')
-      .insert([{
-        product_id,
-        customer_id: customerId,
-        customer_name: customer.name,
-        order_id: order_id || null,
-        rating,
-        title: title || null,
-        comment: comment || null,
-        is_verified: isVerified,
-        is_approved: true // Auto-approve, or set false for moderation
-      }])
-      .select()
-      .single();
+    const result = await pool.query(
+      `INSERT INTO reviews (product_id, customer_id, customer_name, order_id, rating, title, comment, is_verified, is_approved)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+       RETURNING *`,
+      [product_id, customerId, customerResult.rows[0].name, order_id || null, rating, title || null, comment || null, isVerified]
+    );
 
-    if (error) throw error;
-
-    res.status(201).json({ success: true, data: review });
+    res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     console.error('Create review error:', error);
     res.status(500).json({ error: 'Failed to create review' });
   }
 });
 
-// PUT update review (authenticated customer, own reviews only)
+// PUT update review
 router.put('/:id', authenticateCustomer, async (req: any, res: Response) => {
   try {
     const { customerId } = req.customer;
@@ -178,41 +155,42 @@ router.put('/:id', authenticateCustomer, async (req: any, res: Response) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
-    const { data: review, error } = await supabase
-      .from('reviews')
-      .update({
-        rating,
-        title,
-        comment,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .eq('customer_id', customerId)
-      .select()
-      .single();
+    const result = await pool.query(
+      `UPDATE reviews SET
+        rating = COALESCE($1, rating),
+        title = COALESCE($2, title),
+        comment = COALESCE($3, comment),
+        updated_at = NOW()
+       WHERE id = $4 AND customer_id = $5
+       RETURNING *`,
+      [rating, title, comment, id, customerId]
+    );
 
-    if (error) throw error;
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
 
-    res.json({ success: true, data: review });
+    res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     console.error('Update review error:', error);
     res.status(500).json({ error: 'Failed to update review' });
   }
 });
 
-// DELETE review (authenticated customer, own reviews only)
+// DELETE review
 router.delete('/:id', authenticateCustomer, async (req: any, res: Response) => {
   try {
     const { customerId } = req.customer;
     const { id } = req.params;
 
-    const { error } = await supabase
-      .from('reviews')
-      .delete()
-      .eq('id', id)
-      .eq('customer_id', customerId);
+    const result = await pool.query(
+      'DELETE FROM reviews WHERE id = $1 AND customer_id = $2 RETURNING id',
+      [id, customerId]
+    );
 
-    if (error) throw error;
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
 
     res.json({ success: true });
   } catch (error: any) {
@@ -226,23 +204,14 @@ router.post('/:id/helpful', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Increment helpful count
-    const { data: review } = await supabase
-      .from('reviews')
-      .select('helpful_count')
-      .eq('id', id)
-      .single();
+    const result = await pool.query(
+      'UPDATE reviews SET helpful_count = helpful_count + 1 WHERE id = $1 RETURNING id',
+      [id]
+    );
 
-    if (!review) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Review not found' });
     }
-
-    const { error } = await supabase
-      .from('reviews')
-      .update({ helpful_count: (review.helpful_count || 0) + 1 })
-      .eq('id', id);
-
-    if (error) throw error;
 
     res.json({ success: true });
   } catch (error: any) {
@@ -256,24 +225,19 @@ router.get('/admin/all', authenticateAdmin, async (req: Request, res: Response) 
   try {
     const { status = 'all', limit = 50, offset = 0 } = req.query;
 
-    let query = supabase
-      .from('reviews')
-      .select('*')
-      .order('created_at', { ascending: false });
-
+    let whereClause = '';
     if (status === 'pending') {
-      query = query.eq('is_approved', false);
+      whereClause = 'WHERE is_approved = false';
     } else if (status === 'approved') {
-      query = query.eq('is_approved', true);
+      whereClause = 'WHERE is_approved = true';
     }
 
-    query = query.range(Number(offset), Number(offset) + Number(limit) - 1);
+    const result = await pool.query(
+      `SELECT * FROM reviews ${whereClause} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+      [Number(limit), Number(offset)]
+    );
 
-    const { data: reviews, error } = await query;
-
-    if (error) throw error;
-
-    res.json({ success: true, data: reviews || [] });
+    res.json({ success: true, data: result.rows });
   } catch (error: any) {
     console.error('Get all reviews error:', error);
     res.status(500).json({ error: 'Failed to fetch reviews' });
@@ -286,16 +250,16 @@ router.patch('/:id/approve', authenticateAdmin, async (req: Request, res: Respon
     const { id } = req.params;
     const { is_approved } = req.body;
 
-    const { data, error } = await supabase
-      .from('reviews')
-      .update({ is_approved, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
+    const result = await pool.query(
+      'UPDATE reviews SET is_approved = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [is_approved, id]
+    );
 
-    if (error) throw error;
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
 
-    res.json({ success: true, data });
+    res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     console.error('Approve review error:', error);
     res.status(500).json({ error: 'Failed to update review' });
@@ -307,12 +271,14 @@ router.delete('/admin/:id', authenticateAdmin, async (req: Request, res: Respons
   try {
     const { id } = req.params;
 
-    const { error } = await supabase
-      .from('reviews')
-      .delete()
-      .eq('id', id);
+    const result = await pool.query(
+      'DELETE FROM reviews WHERE id = $1 RETURNING id',
+      [id]
+    );
 
-    if (error) throw error;
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
 
     res.json({ success: true });
   } catch (error: any) {
