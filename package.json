@@ -13,7 +13,7 @@
     "seed": "cd server && npm run seed"
   },
   "dependencies": {
-    "@astrojs/tailwind": "@6.0.2",
+    "@astrojs/tailwind": "^6.0.2",
     "@supabase/supabase-js": "^2.117.3",
     "astro": "^5.7.10",
     "lucide": "^0.469.0",
