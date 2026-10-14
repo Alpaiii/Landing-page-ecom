@@ -22,8 +22,9 @@ const PORT = process.env.PORT || 8000;
 const distPath = join(__dirname, '../../dist');
 
 // Middleware
+const corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || true,
+  origin: corsOrigin === '*' ? true : corsOrigin,
   credentials: true
 }));
 app.use(express.json());
