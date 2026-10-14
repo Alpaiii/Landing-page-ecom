@@ -33,3 +33,6 @@ Thumbs.db
 
 # Backup
 .backup-v1/
+
+# Vercel
+.vercel/

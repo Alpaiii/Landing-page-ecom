@@ -1,6 +1,6 @@
-# Roquace - E-commerce Landing Page + Backend
+# Roquace - E-commerce Monolith
 
-Full-stack e-commerce project dengan Astro frontend dan Express backend.
+Full-stack e-commerce project dengan Astro frontend dan Express backend dalam satu service Railway.
 
 ## Project Structure
 
@@ -16,11 +16,10 @@ Landing Page Astro/
 │   │   ├── middleware/
 │   │   └── routes/
 │   ├── scripts/
-│   └── database/
+│   └── package.json
 ├── public/
-├── railway.json            # Backend Railway config
-├── railway.frontend.json   # Frontend Railway config
-└── .github/workflows/      # CI/CD pipelines
+├── railway.json            # Railway deployment config
+└── .github/workflows/      # CI/CD
 ```
 
 ## Tech Stack
@@ -40,15 +39,12 @@ Landing Page Astro/
 
 ### 1. Install Dependencies
 
-**Root (Frontend):**
 ```bash
+# Frontend
 npm install
-```
 
-**Backend:**
-```bash
-cd server
-npm install
+# Backend
+cd server && npm install
 ```
 
 ### 2. Configure Backend
@@ -73,23 +69,17 @@ npm run seed
 
 ### 4. Run Development
 
-**Run both (Frontend + Backend):**
 ```bash
-npm run dev:all
-```
-
-**Or run separately:**
-
-```bash
-# Terminal 1 - Frontend
+# Run both frontend + backend
 npm run dev
 
-# Terminal 2 - Backend
-npm run dev:server
+# Or separately:
+npm run dev:frontend    # Frontend only
+npm run dev:server      # Backend only
 ```
 
 - Frontend: http://localhost:4321
-- Backend API: http://localhost:4000
+- Backend API: http://localhost:4000/api
 
 ## Railway Deployment
 
@@ -99,11 +89,12 @@ npm run dev:server
 2. **Setup Railway:**
    - Create new project from GitHub repo
    - Add PostgreSQL database
-   - Deploy backend service (root: `server/`)
-   - Deploy frontend service (root: `./`)
+   - Deploy service (root: `./`)
 3. **Set Environment Variables:**
-   - Backend: `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN`
-   - Frontend: `PUBLIC_API_URL`
+   - `DATABASE_URL` (auto-injected)
+   - `NODE_ENV=production`
+   - `JWT_SECRET` (generate with `openssl rand -base64 32`)
+   - `CORS_ORIGIN` (your Railway domain)
 
 ### Auto-Deploy
 
@@ -111,38 +102,17 @@ Push ke `main` branch akan trigger auto-deploy via GitHub Actions.
 
 ## API Endpoints
 
-### Auth
-- `POST /api/auth/login` - Admin login
-- `GET /api/auth/verify` - Verify token
-
-### Products
-- `GET /api/products` - List all products
-- `GET /api/products/:id` - Get single product
-- `POST /api/products` - Create product (admin)
-- `PUT /api/products/:id` - Update product (admin)
-- `DELETE /api/products/:id` - Delete product (admin)
-
-### Customers
-- `POST /api/customers/register` - Customer register
-- `POST /api/customers/customer-login` - Customer login
-- `GET /api/customers/orders` - Get customer orders
-- `GET /api/customers/addresses` - Get customer addresses
-
-### Orders
-- `POST /api/orders` - Create order
-- `GET /api/orders/track/:id` - Track order
-
-### Coupons
-- `POST /api/coupons/validate` - Validate coupon
-- `GET /api/coupons/active` - Get active coupons
-
-### Reviews
-- `GET /api/reviews/product/:productId` - Get product reviews
-- `POST /api/reviews` - Create review
-
-### Search
-- `GET /api/search/products` - Search products
-- `GET /api/search/suggestions` - Search suggestions
+| Endpoint | Method | Auth |
+|----------|--------|------|
+| `/api/products` | GET | Public |
+| `/api/products/:id` | GET | Public |
+| `/api/auth/login` | POST | Public |
+| `/api/customers/register` | POST | Public |
+| `/api/customers/customer-login` | POST | Public |
+| `/api/orders` | POST | Public |
+| `/api/orders/track/:id` | GET | Public |
+| `/api/coupons/validate` | POST | Public |
+| `/api/search/products` | GET | Public |
 
 ## Default Credentials
 
@@ -153,12 +123,24 @@ Push ke `main` branch akan trigger auto-deploy via GitHub Actions.
 
 ## Scripts
 
-- `npm run dev` - Run frontend only
-- `npm run dev:server` - Run backend only
-- `npm run dev:all` - Run both concurrently
-- `npm run build` - Build frontend
-- `npm run build:server` - Build backend
-- `npm run preview` - Preview frontend build
+- `npm run dev` - Run frontend + backend concurrently
+- `npm run build` - Build frontend + backend
+- `npm run build:frontend` - Build frontend only
+- `npm run build:backend` - Build backend only
+- `npm run start` - Start production server
+- `npm run railway` - Full Railway deployment (build + migrate + seed + start)
+- `npm run migrate` - Run database migrations
+- `npm run seed` - Seed database
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes (auto-injected) |
+| `NODE_ENV` | Environment mode | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `CORS_ORIGIN` | Allowed CORS origin | No |
+| `PORT` | Server port | No (default: 8000) |
 
 ## License
 

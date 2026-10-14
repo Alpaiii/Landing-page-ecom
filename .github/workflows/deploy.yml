@@ -1,14 +1,19 @@
-name: Deploy Backend to Railway
+name: Deploy Monolith to Railway
 
 on:
   push:
     branches: [main]
     paths:
+      - 'src/**'
       - 'server/**'
-      - '.github/workflows/deploy-backend.yml'
+      - 'public/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'railway.json'
+      - '.github/workflows/deploy.yml'
 
 jobs:
-  deploy-backend:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
@@ -20,35 +25,35 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: server/package-lock.json
       
-      - name: Install dependencies
+      - name: Install frontend dependencies
+        run: npm ci
+      
+      - name: Install backend dependencies
         working-directory: ./server
         run: npm ci
       
-      - name: Build TypeScript
-        working-directory: ./server
-        run: npm run build
+      - name: Build frontend
+        run: npm run build:frontend
+      
+      - name: Build backend
+        run: npm run build:backend
       
       - name: Deploy to Railway
         uses: railway/cli@latest
-        with:
-          service: backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
-      - name: Run Database Migrations
+      - name: Run migrations
         uses: railway/cli@latest
         with:
-          service: backend
           command: npm run migrate
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
-      - name: Seed Database
+      - name: Seed database
         uses: railway/cli@latest
         with:
-          service: backend
           command: npm run seed
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
