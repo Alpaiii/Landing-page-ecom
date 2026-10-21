@@ -9,8 +9,9 @@ const router = Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create uploads directory if not exists
-const uploadsDir = path.join(__dirname, '../../../public/uploads');
+// Create uploads directory if not exists. UPLOAD_DIR lets production point at a
+// persistent volume; without it files live in public/uploads (ephemeral).
+const uploadsDir = process.env.UPLOAD_DIR || path.join(__dirname, '../../../public/uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }

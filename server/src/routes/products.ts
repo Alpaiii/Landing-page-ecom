@@ -154,42 +154,68 @@ router.put('/:id', authenticateAdmin, async (req: Request, res: Response) => {
       is_new
     } = req.body;
 
+    const updates: string[] = [];
+    const values: any[] = [];
+    const set = (column: string, value: any) => {
+      updates.push(`${column} = $${values.length + 1}`);
+      values.push(value);
+    };
+
+    for (const [field, value] of Object.entries({ name, slug, description, category })) {
+      if (value !== undefined) {
+        if (typeof value !== 'string' || !value.trim()) {
+          res.status(400).json({ error: `${field} cannot be empty` });
+          return;
+        }
+        set(field, value.trim());
+      }
+    }
+
+    if (price !== undefined) {
+      const numericPrice = Number(price);
+      if (price === null || price === '' || Number.isNaN(numericPrice) || numericPrice < 0) {
+        res.status(400).json({ error: 'Price must be a non-negative number' });
+        return;
+      }
+      set('price', numericPrice);
+    }
+
+    if (compare_price !== undefined) {
+      if (compare_price === null || compare_price === '') {
+        set('compare_price', null);
+      } else {
+        const numericComparePrice = Number(compare_price);
+        if (Number.isNaN(numericComparePrice) || numericComparePrice < 0) {
+          res.status(400).json({ error: 'Compare price must be a non-negative number' });
+          return;
+        }
+        set('compare_price', numericComparePrice);
+      }
+    }
+
+    if (stock !== undefined) {
+      const numericStock = Number(stock);
+      if (!Number.isInteger(numericStock) || numericStock < 0) {
+        res.status(400).json({ error: 'Stock must be a non-negative integer' });
+        return;
+      }
+      set('stock', numericStock);
+    }
+
+    if (subcategory !== undefined) set('subcategory', subcategory || null);
+    if (images !== undefined) set('images', JSON.stringify(images || []));
+    if (colors !== undefined) set('colors', JSON.stringify(colors || []));
+    if (sizes !== undefined) set('sizes', JSON.stringify(sizes || []));
+    if (tags !== undefined) set('tags', JSON.stringify(tags || []));
+    if (is_featured !== undefined) set('is_featured', Boolean(is_featured));
+    if (is_new !== undefined) set('is_new', Boolean(is_new));
+
+    updates.push('updated_at = NOW()');
+    values.push(req.params.id);
+
     const result = await pool.query(
-      `UPDATE products SET
-        name = COALESCE($1, name),
-        slug = COALESCE($2, slug),
-        description = COALESCE($3, description),
-        price = COALESCE($4, price),
-        compare_price = COALESCE($5, compare_price),
-        category = COALESCE($6, category),
-        subcategory = COALESCE($7, subcategory),
-        images = COALESCE($8, images),
-        colors = COALESCE($9, colors),
-        sizes = COALESCE($10, sizes),
-        tags = COALESCE($11, tags),
-        stock = COALESCE($12, stock),
-        is_featured = COALESCE($13, is_featured),
-        is_new = COALESCE($14, is_new),
-        updated_at = NOW()
-       WHERE id = $15
-       RETURNING *`,
-      [
-        name,
-        slug,
-        description,
-        price,
-        compare_price,
-        category,
-        subcategory,
-        images ? JSON.stringify(images) : null,
-        colors ? JSON.stringify(colors) : null,
-        sizes ? JSON.stringify(sizes) : null,
-        tags ? JSON.stringify(tags) : null,
-        stock,
-        is_featured,
-        is_new,
-        req.params.id
-      ]
+      `UPDATE products SET ${updates.join(', ')} WHERE id = $${values.length} RETURNING *`,
+      values
     );
 
     if (result.rows.length === 0) {
@@ -199,7 +225,12 @@ router.put('/:id', authenticateAdmin, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    if (error.code === '23505') {
+      res.status(409).json({ error: 'Slug already exists. Pick a different slug.' });
+      return;
+    }
+    console.error('Update product error:', error);
+    res.status(400).json({ error: 'Failed to update product' });
   }
 });
 

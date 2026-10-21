@@ -1,5 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
@@ -23,6 +24,14 @@ const PORT = process.env.PORT || 8000;
 const distPath = join(__dirname, '../../dist');
 
 // Middleware
+// Railway terminates TLS in front of the app, so trust one proxy hop to make
+// req.ip (used by the login rate limiter) the real client address.
+app.set('trust proxy', 1);
+app.use(helmet({
+  // The frontend relies on inline scripts/styles, so CSP is not enabled here.
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 const corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({
   origin: corsOrigin === '*' ? true : corsOrigin,
@@ -43,7 +52,8 @@ app.use('/api/search', searchRouter);
 app.use('/api/collections', collectionsRouter);
 
 // Serve uploaded files
-app.use('/uploads', express.static(join(__dirname, '../../public/uploads')));
+const uploadsPath = process.env.UPLOAD_DIR || join(__dirname, '../../public/uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 // Health check endpoint for monitoring
 app.get('/health', (req: Request, res: Response) => {

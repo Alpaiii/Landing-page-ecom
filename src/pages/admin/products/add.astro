@@ -131,6 +131,12 @@ const title = 'Add Product';
               placeholder="/images/products/1.webp"
             />
             <p class="text-xs text-foreground/60 mt-1">Path to product image</p>
+
+            <div class="mt-3 flex items-center gap-4">
+              <input type="file" id="image-file" accept="image/jpeg,image/png,image/webp" class="text-sm font-body" />
+              <span id="upload-status" class="text-xs font-body text-foreground/60"></span>
+            </div>
+            <img id="image-preview" class="hidden mt-3 w-24 h-28 object-cover border border-border" alt="Preview" />
           </div>
 
           <!-- Colors -->
@@ -233,6 +239,9 @@ const title = 'Add Product';
   const slugInput = document.getElementById('slug') as HTMLInputElement;
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
   const errorMessage = document.getElementById('error-message') as HTMLDivElement;
+  const imageFileInput = document.getElementById('image-file') as HTMLInputElement;
+  const imagePreview = document.getElementById('image-preview') as HTMLImageElement;
+  const uploadStatus = document.getElementById('upload-status') as HTMLSpanElement;
 
   // Check auth
   async function checkAuth() {
@@ -269,6 +278,39 @@ const title = 'Add Product';
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
     slugInput.value = slug;
+  });
+
+  // Upload image file and use the returned URL
+  imageFileInput?.addEventListener('change', async () => {
+    const file = imageFileInput.files?.[0];
+    if (!file) return;
+
+    uploadStatus.textContent = 'Uploading...';
+    errorMessage.classList.add('hidden');
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const body = new FormData();
+      body.append('image', file);
+
+      const response = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Upload failed');
+
+      (document.getElementById('images') as HTMLInputElement).value = result.url;
+      imagePreview.src = result.url;
+      imagePreview.classList.remove('hidden');
+      uploadStatus.textContent = 'Uploaded';
+    } catch (error: any) {
+      uploadStatus.textContent = '';
+      errorMessage.textContent = error.message || 'Upload failed';
+      errorMessage.classList.remove('hidden');
+    }
   });
 
   // Form submit

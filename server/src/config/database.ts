@@ -10,7 +10,8 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  // Railway's internal network occasionally needs a few seconds during startup.
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on('error', (err: Error) => {
