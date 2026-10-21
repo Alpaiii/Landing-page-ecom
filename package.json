@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"astro dev\" \"tsx watch server/src/index.ts\"",
+    "dev": "concurrently \"astro dev\" \"tsx watch --tsconfig server/tsconfig.json server/src/index.ts\"",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "astro build",
     "build:backend": "tsc -p server/tsconfig.json",

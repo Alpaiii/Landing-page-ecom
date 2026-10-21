@@ -11,6 +11,7 @@ import ordersRouter from './routes/orders.js';
 import couponsRouter from './routes/coupons.js';
 import reviewsRouter from './routes/reviews.js';
 import searchRouter from './routes/search.js';
+import collectionsRouter from './routes/collections.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -39,6 +40,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/coupons', couponsRouter);
 app.use('/api/reviews', reviewsRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/collections', collectionsRouter);
 
 // Serve uploaded files
 app.use('/uploads', express.static(join(__dirname, '../../public/uploads')));
@@ -57,6 +59,7 @@ app.get('/health', (req: Request, res: Response) => {
       coupons: '/api/coupons',
       reviews: '/api/reviews',
       search: '/api/search',
+      collections: '/api/collections',
       upload: '/api/upload'
     }
   });

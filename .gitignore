@@ -11,6 +11,7 @@ server/public/uploads/
 .env
 .env.local
 .env.development
+.env.production
 server/.env
 server/.env.local
 

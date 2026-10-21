@@ -75,6 +75,32 @@ router.post('/', authenticateAdmin, async (req: Request, res: Response) => {
       is_new
     } = req.body;
 
+    // Basic validation so admin mistakes return a clear 4xx instead of a DB error.
+    if (!name || !slug || !description || !category) {
+      res.status(400).json({ error: 'Name, slug, description, and category are required' });
+      return;
+    }
+
+    const numericPrice = Number(price);
+    if (price === undefined || price === null || price === '' || Number.isNaN(numericPrice) || numericPrice < 0) {
+      res.status(400).json({ error: 'Price must be a non-negative number' });
+      return;
+    }
+
+    const numericComparePrice = compare_price === undefined || compare_price === null || compare_price === ''
+      ? null
+      : Number(compare_price);
+    if (numericComparePrice !== null && (Number.isNaN(numericComparePrice) || numericComparePrice < 0)) {
+      res.status(400).json({ error: 'Compare price must be a non-negative number' });
+      return;
+    }
+
+    const numericStock = stock === undefined || stock === null || stock === '' ? 0 : Number(stock);
+    if (!Number.isInteger(numericStock) || numericStock < 0) {
+      res.status(400).json({ error: 'Stock must be a non-negative integer' });
+      return;
+    }
+
     const result = await pool.query(
       `INSERT INTO products (name, slug, description, price, compare_price, category, subcategory, images, colors, sizes, tags, stock, is_featured, is_new)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
@@ -83,15 +109,15 @@ router.post('/', authenticateAdmin, async (req: Request, res: Response) => {
         name,
         slug,
         description,
-        price,
-        compare_price || null,
+        numericPrice,
+        numericComparePrice,
         category,
         subcategory || null,
         JSON.stringify(images || []),
         JSON.stringify(colors || []),
         JSON.stringify(sizes || []),
         JSON.stringify(tags || []),
-        stock || 0,
+        numericStock,
         is_featured || false,
         is_new || false
       ]
@@ -99,7 +125,12 @@ router.post('/', authenticateAdmin, async (req: Request, res: Response) => {
 
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    if (error.code === '23505') {
+      res.status(409).json({ error: 'Slug already exists. Pick a different slug.' });
+      return;
+    }
+    console.error('Create product error:', error);
+    res.status(400).json({ error: 'Failed to create product' });
   }
 });
 

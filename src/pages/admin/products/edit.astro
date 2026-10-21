@@ -1,0 +1,363 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const title = 'Edit Product';
+---
+
+<Layout title={title}>
+  <div id="auth-check" class="hidden min-h-screen flex items-center justify-center">
+    <p class="font-body">Checking authentication...</p>
+  </div>
+
+  <div id="main-content" class="hidden min-h-screen bg-background">
+    <!-- Header -->
+    <header class="bg-foreground text-background">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-heading">Edit Product</h1>
+          <a href="/admin" class="text-sm font-body hover:underline">← Back to Dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Form -->
+    <main class="container mx-auto px-4 py-8 max-w-3xl">
+      <form id="product-form" class="bg-background border border-border p-8">
+        <div id="loading" class="font-body text-foreground/60 mb-6">Loading product...</div>
+
+        <div id="form-fields" class="hidden space-y-6">
+          <!-- Name -->
+          <div>
+            <label for="name" class="block text-sm font-body font-medium mb-2">Product Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="e.g., Classic Canvas Tote"
+            />
+          </div>
+
+          <!-- Slug -->
+          <div>
+            <label for="slug" class="block text-sm font-body font-medium mb-2">Slug *</label>
+            <input
+              type="text"
+              id="slug"
+              name="slug"
+              required
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="classic-canvas-tote"
+            />
+            <p class="text-xs text-foreground/60 mt-1">URL-friendly version of name</p>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="description" class="block text-sm font-body font-medium mb-2">Description *</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="4"
+              required
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="Product description..."
+            ></textarea>
+          </div>
+
+          <!-- Price -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="price" class="block text-sm font-body font-medium mb-2">Price (IDR) *</label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                required
+                min="0"
+                step="1000"
+                class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              />
+            </div>
+            <div>
+              <label for="compare_price" class="block text-sm font-body font-medium mb-2">Compare Price (IDR)</label>
+              <input
+                type="number"
+                id="compare_price"
+                name="compare_price"
+                min="0"
+                step="1000"
+                class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              />
+            </div>
+          </div>
+
+          <!-- Category & Subcategory -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="category" class="block text-sm font-body font-medium mb-2">Category *</label>
+              <input
+                type="text"
+                id="category"
+                name="category"
+                required
+                class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              />
+            </div>
+            <div>
+              <label for="subcategory" class="block text-sm font-body font-medium mb-2">Subcategory</label>
+              <input
+                type="text"
+                id="subcategory"
+                name="subcategory"
+                class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              />
+            </div>
+          </div>
+
+          <!-- Images -->
+          <div>
+            <label for="images" class="block text-sm font-body font-medium mb-2">Image URL *</label>
+            <input
+              type="text"
+              id="images"
+              name="images"
+              required
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="/images/products/1.webp"
+            />
+            <p class="text-xs text-foreground/60 mt-1">Path to product image</p>
+          </div>
+
+          <!-- Colors -->
+          <div>
+            <label for="colors" class="block text-sm font-body font-medium mb-2">Colors (comma-separated)</label>
+            <input
+              type="text"
+              id="colors"
+              name="colors"
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="Natural, Black, Navy"
+            />
+          </div>
+
+          <!-- Sizes -->
+          <div>
+            <label for="sizes" class="block text-sm font-body font-medium mb-2">Sizes (comma-separated)</label>
+            <input
+              type="text"
+              id="sizes"
+              name="sizes"
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="One Size"
+            />
+          </div>
+
+          <!-- Tags -->
+          <div>
+            <label for="tags" class="block text-sm font-body font-medium mb-2">Tags (comma-separated)</label>
+            <input
+              type="text"
+              id="tags"
+              name="tags"
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+              placeholder="tote, canvas, classic"
+            />
+          </div>
+
+          <!-- Stock -->
+          <div>
+            <label for="stock" class="block text-sm font-body font-medium mb-2">Stock *</label>
+            <input
+              type="number"
+              id="stock"
+              name="stock"
+              required
+              min="0"
+              class="w-full px-4 py-3 border border-border focus:border-foreground focus:outline-none font-body"
+            />
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="is_featured" name="is_featured" class="w-4 h-4" />
+              <span class="text-sm font-body">Featured</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="is_new" name="is_new" class="w-4 h-4" />
+              <span class="text-sm font-body">New Arrival</span>
+            </label>
+          </div>
+
+          <!-- Error Message -->
+          <div id="error-message" class="hidden text-sm text-red-600 font-body p-4 bg-red-50 border border-red-200"></div>
+
+          <!-- Submit -->
+          <div class="flex gap-4">
+            <button
+              type="submit"
+              id="submit-btn"
+              class="flex-1 bg-foreground text-background py-3 font-body uppercase tracking-wider hover:bg-foreground/90"
+            >
+              Save Changes
+            </button>
+            <a
+              href="/admin"
+              class="px-6 py-3 border border-border font-body uppercase tracking-wider hover:bg-foreground/5"
+            >
+              Cancel
+            </a>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
+
+  const productId = new URLSearchParams(window.location.search).get('id');
+
+  const authCheck = document.getElementById('auth-check');
+  const mainContent = document.getElementById('main-content');
+  const form = document.getElementById('product-form') as HTMLFormElement;
+  const loading = document.getElementById('loading') as HTMLDivElement;
+  const formFields = document.getElementById('form-fields') as HTMLDivElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const errorMessage = document.getElementById('error-message') as HTMLDivElement;
+
+  function field(id: string): HTMLInputElement {
+    return document.getElementById(id) as HTMLInputElement;
+  }
+
+  function showError(message: string) {
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+  }
+
+  // Check auth
+  async function checkAuth() {
+    authCheck?.classList.remove('hidden');
+
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      window.location.href = '/admin/login';
+      return false;
+    }
+
+    const response = await fetch(`${API_URL}/auth/verify`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      localStorage.removeItem('admin_token');
+      window.location.href = '/admin/login';
+      return false;
+    }
+
+    authCheck?.classList.add('hidden');
+    mainContent?.classList.remove('hidden');
+    return true;
+  }
+
+  // Load product and fill the form
+  async function loadProduct() {
+    if (!productId) {
+      window.location.href = '/admin';
+      return;
+    }
+
+    const token = localStorage.getItem('admin_token');
+    const response = await fetch(`${API_URL}/products/${encodeURIComponent(productId)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      loading.textContent = 'Product not found.';
+      return;
+    }
+
+    const result = await response.json();
+    const product = result.data;
+
+    field('name').value = product.name ?? '';
+    field('slug').value = product.slug ?? '';
+    field('description').value = product.description ?? '';
+    field('price').value = product.price ?? '';
+    field('compare_price').value = product.compare_price ?? '';
+    field('category').value = product.category ?? '';
+    field('subcategory').value = product.subcategory ?? '';
+    field('images').value = product.images?.[0] ?? '';
+    field('colors').value = Array.isArray(product.colors) ? product.colors.join(', ') : '';
+    field('sizes').value = Array.isArray(product.sizes) ? product.sizes.join(', ') : '';
+    field('tags').value = Array.isArray(product.tags) ? product.tags.join(', ') : '';
+    field('stock').value = product.stock ?? 0;
+    field('is_featured').checked = Boolean(product.is_featured);
+    field('is_new').checked = Boolean(product.is_new);
+
+    loading.classList.add('hidden');
+    formFields.classList.remove('hidden');
+  }
+
+  // Submit changes
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    errorMessage.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+
+    try {
+      const formData = new FormData(form);
+      const splitList = (value: FormDataEntryValue | null) =>
+        String(value ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+
+      const productData = {
+        name: formData.get('name') as string,
+        slug: formData.get('slug') as string,
+        description: formData.get('description') as string,
+        price: parseFloat(formData.get('price') as string),
+        compare_price: formData.get('compare_price') ? parseFloat(formData.get('compare_price') as string) : null,
+        category: formData.get('category') as string,
+        subcategory: formData.get('subcategory') as string || null,
+        images: splitList(formData.get('images')),
+        colors: splitList(formData.get('colors')),
+        sizes: splitList(formData.get('sizes')),
+        tags: splitList(formData.get('tags')),
+        stock: parseInt(formData.get('stock') as string),
+        is_featured: formData.get('is_featured') === 'on',
+        is_new: formData.get('is_new') === 'on'
+      };
+
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`${API_URL}/products/${encodeURIComponent(productId!)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(productData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save product');
+      }
+
+      window.location.href = '/admin';
+    } catch (error: any) {
+      console.error('Error saving product:', error);
+      showError(error.message || 'Failed to save product');
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Changes';
+    }
+  });
+
+  checkAuth().then((ok) => {
+    if (ok) loadProduct();
+  });
+</script>

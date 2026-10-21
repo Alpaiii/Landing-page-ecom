@@ -5,6 +5,17 @@ import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
+// Resolve a product identifier that may be a UUID or a slug into a UUID.
+async function resolveProductId(identifier: string): Promise<string | null> {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+
+  const result = isUuid
+    ? await pool.query('SELECT id FROM products WHERE id = $1', [identifier])
+    : await pool.query('SELECT id FROM products WHERE slug = $1', [identifier]);
+
+  return result.rows[0]?.id ?? null;
+}
+
 // Middleware to authenticate customer
 const authenticateCustomer = async (req: any, res: Response, next: any) => {
   try {
@@ -28,6 +39,12 @@ router.get('/product/:productId', async (req: Request, res: Response) => {
     const { productId } = req.params;
     const { sort = 'recent', limit = 10, offset = 0 } = req.query;
 
+    const resolvedId = await resolveProductId(String(productId));
+    if (!resolvedId) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
     let orderBy = 'created_at DESC';
     if (sort === 'highest') {
       orderBy = 'rating DESC';
@@ -42,13 +59,13 @@ router.get('/product/:productId', async (req: Request, res: Response) => {
        WHERE product_id = $1 AND is_approved = true
        ORDER BY ${orderBy}
        LIMIT $2 OFFSET $3`,
-      [productId, Number(limit), Number(offset)]
+      [resolvedId, Number(limit), Number(offset)]
     );
 
     // Get review stats
     const statsResult = await pool.query(
       'SELECT rating FROM reviews WHERE product_id = $1 AND is_approved = true',
-      [productId]
+      [resolvedId]
     );
 
     const stats: Array<{ rating: number }> = statsResult.rows;
@@ -94,6 +111,12 @@ router.post('/', authenticateCustomer, async (req: any, res: Response) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
+    // Accept either a product UUID or a slug.
+    const resolvedId = await resolveProductId(product_id);
+    if (!resolvedId) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
     // Get customer info
     const customerResult = await pool.query(
       'SELECT name FROM customers WHERE id = $1',
@@ -107,7 +130,7 @@ router.post('/', authenticateCustomer, async (req: any, res: Response) => {
     // Check if already reviewed
     const existingResult = await pool.query(
       'SELECT id FROM reviews WHERE product_id = $1 AND customer_id = $2',
-      [product_id, customerId]
+      [resolvedId, customerId]
     );
 
     if (existingResult.rows.length > 0) {
@@ -125,7 +148,7 @@ router.post('/', authenticateCustomer, async (req: any, res: Response) => {
       if (orderResult.rows.length > 0) {
         const items = orderResult.rows[0].items;
         if (Array.isArray(items)) {
-          isVerified = items.some((item: any) => item.product_id === product_id);
+          isVerified = items.some((item: any) => item.product_id === resolvedId || item.product_id === product_id);
         }
       }
     }
@@ -134,7 +157,7 @@ router.post('/', authenticateCustomer, async (req: any, res: Response) => {
       `INSERT INTO reviews (product_id, customer_id, customer_name, order_id, rating, title, comment, is_verified, is_approved)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
        RETURNING *`,
-      [product_id, customerId, customerResult.rows[0].name, order_id || null, rating, title || null, comment || null, isVerified]
+      [resolvedId, customerId, customerResult.rows[0].name, order_id || null, rating, title || null, comment || null, isVerified]
     );
 
     res.status(201).json({ success: true, data: result.rows[0] });

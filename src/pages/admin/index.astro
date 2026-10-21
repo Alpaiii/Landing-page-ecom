@@ -120,6 +120,21 @@ const title = 'Admin Dashboard';
 <script>
   const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
 
+  // Escape user-controlled values before putting them into innerHTML.
+  function escapeHtml(value: unknown): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatPrice(value: unknown): string {
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toLocaleString('id-ID') : '0';
+  }
+
   const authCheck = document.getElementById('auth-check');
   const dashboardContent = document.getElementById('dashboard-content');
   const adminEmail = document.getElementById('admin-email');
@@ -219,18 +234,18 @@ const title = 'Admin Dashboard';
         tbody.innerHTML = products.map((product: any) => `
           <tr>
             <td class="px-4 py-3">
-              <img src="${product.images?.[0] || '/images/placeholder.jpg'}" alt="${product.name}" class="w-16 h-20 object-cover" />
+              <img src="${escapeHtml(product.images?.[0] || '/images/placeholder.jpg')}" alt="${escapeHtml(product.name)}" class="w-16 h-20 object-cover" />
             </td>
-            <td class="px-4 py-3 font-body">${product.name}</td>
-            <td class="px-4 py-3 font-body">Rp${product.price.toLocaleString('id-ID')}</td>
-            <td class="px-4 py-3 font-body">${product.stock}</td>
+            <td class="px-4 py-3 font-body">${escapeHtml(product.name)}</td>
+            <td class="px-4 py-3 font-body">Rp${formatPrice(product.price)}</td>
+            <td class="px-4 py-3 font-body">${escapeHtml(product.stock ?? 0)}</td>
             <td class="px-4 py-3">
               ${product.is_featured ? '<span class="px-2 py-1 text-xs bg-accent text-white">Featured</span>' : ''}
               ${product.is_new ? '<span class="px-2 py-1 text-xs bg-foreground text-background ml-1">New</span>' : ''}
             </td>
             <td class="px-4 py-3 text-right">
-              <a href="/admin/products/edit/${product.id}" class="text-sm text-foreground hover:underline mr-4">Edit</a>
-              <button onclick="deleteProduct('${product.id}')" class="text-sm text-red-600 hover:underline">Delete</button>
+              <a href="/admin/products/edit?id=${encodeURIComponent(product.id)}" class="text-sm text-foreground hover:underline mr-4">Edit</a>
+              <button data-delete-id="${escapeHtml(product.id)}" class="delete-product text-sm text-red-600 hover:underline">Delete</button>
             </td>
           </tr>
         `).join('');
@@ -261,14 +276,14 @@ const title = 'Admin Dashboard';
           <div class="border border-border p-6">
             <div class="flex items-start justify-between mb-4">
               <div>
-                <h3 class="text-xl font-heading mb-1">${collection.name}</h3>
-                <p class="text-sm text-foreground/60 font-body">${collection.short_description || ''}</p>
+                <h3 class="text-xl font-heading mb-1">${escapeHtml(collection.name)}</h3>
+                <p class="text-sm text-foreground/60 font-body">${escapeHtml(collection.short_description || '')}</p>
               </div>
               ${collection.is_featured ? '<span class="px-3 py-1 text-xs bg-accent text-white">Featured</span>' : ''}
             </div>
-            <p class="text-sm font-body text-foreground/80 mb-4">${collection.description || ''}</p>
+            <p class="text-sm font-body text-foreground/80 mb-4">${escapeHtml(collection.description || '')}</p>
             <div class="flex items-center justify-between">
-              <span class="text-sm font-body text-foreground/60">Slug: ${collection.slug}</span>
+              <span class="text-sm font-body text-foreground/60">Slug: ${escapeHtml(collection.slug)}</span>
             </div>
           </div>
         `).join('');
@@ -281,7 +296,7 @@ const title = 'Admin Dashboard';
   }
 
   // Delete product
-  (window as any).deleteProduct = async (id: string) => {
+  async function deleteProduct(id: string) {
     if (!confirm('Are you sure you want to delete this product?')) return;
     
     try {
@@ -300,7 +315,15 @@ const title = 'Admin Dashboard';
       console.error('Error deleting product:', error);
       alert('Failed to delete product');
     }
-  };
+  }
+
+  // Event delegation for delete buttons (avoids inline handlers + injected attributes).
+  document.getElementById('products-tbody')?.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    const button = target?.closest<HTMLButtonElement>('.delete-product');
+    const id = button?.dataset.deleteId;
+    if (id) deleteProduct(id);
+  });
 
   // Initialize
   checkAuth();
