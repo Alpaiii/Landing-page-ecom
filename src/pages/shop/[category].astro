@@ -5,51 +5,51 @@ import Navbar from '../../components/Navbar.astro';
 import ProductListing from '../../components/ProductListing.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import Footer from '../../components/Footer.astro';
-import { products, getProductsByCategory, getProductsByBadge } from '../../data/products';
 import { getCategoryBySlug } from '../../data/categories';
+import { fetchProducts } from '../../utils/productApi';
 
 /**
  * Category slugs fall into two groups:
  *  - real product categories (women, men, accessories)
  *  - "new-arrivals", which is a badge-based listing rather than a category
  */
-function resolveCategory(slug: string) {
+async function resolveCategory(slug: string) {
+  const products = await fetchProducts();
   const category = getCategoryBySlug(slug);
-
-  if (category && category.slug !== 'new-arrivals') {
-    return {
-      name: category.name,
-      description: category.description,
-      products: getProductsByCategory(category.id as never),
-      /** Only a real category can pre-check the sidebar's category filter. */
-      initialCategory: category.id,
-    };
-  }
 
   if (slug === 'new-arrivals') {
     return {
       name: 'New Arrivals',
       description: 'Fresh styles just dropped. Be the first to shop our latest pieces.',
-      products: getProductsByBadge('New'),
-      initialCategory: undefined,
+      products: products.filter((product) => product.newArrival),
+      initialCategory: 'accessories',
+    };
+  }
+
+  if (slug === 'accessories') {
+    return {
+      name: 'All Bags',
+      description: 'Every bag in the Roquace collection.',
+      products,
+      initialCategory: 'accessories',
+    };
+  }
+
+  if (category) {
+    return {
+      name: category.name,
+      description: category.description,
+      products: products.filter((product) => product.subcategory === category.id),
+      /** Only a real category can pre-check the sidebar's category filter. */
+      initialCategory: 'accessories',
     };
   }
 
   return null;
 }
 
-export function getStaticPaths() {
-  const productCategories = Array.from(new Set(products.map((product) => product.category)));
-
-  // "new-arrivals" is listed in categories.ts but has no products tagged with
-  // that category, so it is added explicitly.
-  return [...productCategories, 'new-arrivals'].map((category) => ({
-    params: { category },
-  }));
-}
-
 const { category: slug } = Astro.params;
-const resolved = resolveCategory(slug!);
+const resolved = await resolveCategory(slug!);
 
 if (!resolved) {
   return Astro.redirect('/shop');

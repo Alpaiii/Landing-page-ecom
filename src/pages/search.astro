@@ -4,11 +4,13 @@ import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Navbar from '../components/Navbar.astro';
 import ProductCardV2 from '../components/ProductCardV2.astro';
 import Footer from '../components/Footer.astro';
-import { products } from '../data/products';
+import { fetchProducts } from '../utils/productApi';
 
 // Get search query from URL
 const url = new URL(Astro.request.url);
 const searchQuery = url.searchParams.get('search') || '';
+
+const products = await fetchProducts();
 
 // Filter products based on search query
 let filteredProducts = products;

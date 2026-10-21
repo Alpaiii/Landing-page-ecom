@@ -14,13 +14,6 @@ import ProductError from '../../components/ProductError.astro';
 import { fetchProductBySlug, fetchProducts } from '../../utils/productApi';
 
 // Get all products for static generation
-export async function getStaticPaths() {
-  const products = await fetchProducts();
-  return products.map((product) => ({
-    params: { slug: product.slug }
-  }));
-}
-
 const { slug } = Astro.params;
 const product = await fetchProductBySlug(slug!);
 

@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
 import productsRouter from './routes/products.js';
 import authRouter from './routes/auth.js';
@@ -65,37 +65,40 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Root path - always serve frontend HTML
-app.get('/', (req: Request, res: Response) => {
-  res.sendFile(join(distPath, 'index.html'));
-});
-
-// Serve Astro frontend build
-app.use(express.static(distPath));
-
-// API 404. Registered before the SPA fallback so an unmatched /api path
-// returns JSON instead of being swallowed by the frontend shell.
+// API 404. Registered before the SSR handler so an unmatched /api path
+// returns JSON instead of the frontend shell.
 app.use('/api', (req: Request, res: Response) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// SPA fallback. Express 5 dropped bare '*' in favour of a named wildcard.
-app.get('/*splat', (req: Request, res: Response) => {
-  res.sendFile(join(distPath, 'index.html'));
-});
+// Serve Astro's static assets, then hand every remaining request to the
+// Astro SSR handler (mode: middleware). Pages are rendered from the Postgres
+// data at request time, so admin changes are visible immediately.
+async function start() {
+  try {
+    const clientPath = join(__dirname, '../../dist/client');
+    app.use(express.static(clientPath));
 
-// Error handling
-app.use((err: any, req: Request, res: Response, next: any) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+    const { handler } = await import(pathToFileURL(join(__dirname, '../../dist/server/entry.mjs')).href);
+    app.use(handler);
+  } catch (error) {
+    console.error('Failed to load Astro SSR handler:', error);
+  }
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Frontend: http://localhost:${PORT}`);
-  console.log(`🔌 API: http://localhost:${PORT}/api`);
-});
+  // Error handling
+  app.use((err: any, req: Request, res: Response, next: any) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 Frontend: http://localhost:${PORT}`);
+    console.log(`🔌 API: http://localhost:${PORT}/api`);
+  });
+}
+
+start();
 
 export default app;

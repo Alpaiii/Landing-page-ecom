@@ -1,18 +1,18 @@
 import type { Product } from '../data/products';
-import { products as staticProducts } from '../data/products';
 
 const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
 
 /**
- * Resolve an API path to an absolute URL.
+ * Resolve an API path.
  *
- * Pages render at build time (SSG), where `fetch` receives a relative path and
- * Node rejects it with ERR_INVALID_URL. On the server we fall back to the local
- * static dataset; in the browser the same-origin relative path is valid.
+ * On the client a same-origin relative path is valid. During SSR Astro runs in
+ * the same Node process as the Express API, so we call it over loopback.
  */
 function apiUrl(path: string): string {
   if (typeof window !== 'undefined') return `${API_URL}${path}`;
-  return new URL(`${API_URL}${path}`, import.meta.env.SITE ?? 'http://localhost:4321').toString();
+
+  const base = process.env.INTERNAL_API_URL || `http://127.0.0.1:${process.env.PORT || 8000}`;
+  return `${base}${API_URL}${path}`;
 }
 
 // Map database product to frontend Product type
@@ -54,7 +54,7 @@ export function mapApiProduct(apiProduct: any): Product {
     price: apiProduct.price,
     compareAtPrice: apiProduct.compare_price || undefined,
     category: mapCategory(apiProduct.category),
-    subcategory: apiProduct.subcategory || undefined,
+    subcategory: deriveSubcategory(apiProduct),
     badge,
     images,
     thumbnail: images[0]?.src || '/images/placeholder.jpg',
@@ -82,6 +82,27 @@ function mapCategory(category: string): Product['category'] {
   return categoryMap[category] || 'accessories';
 }
 
+/**
+ * The database stores every bag with subcategory "Bags". The storefront
+ * navigation (categories.ts) expects tote/crossbody/messenger, so derive it
+ * from the slug/name/tags and fall back to the broad "tote" bucket.
+ */
+function deriveSubcategory(apiProduct: any): string | undefined {
+  const haystack = [
+    apiProduct.subcategory,
+    apiProduct.slug,
+    apiProduct.name,
+    ...(apiProduct.tags || [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (haystack.includes('crossbody')) return 'crossbody';
+  if (haystack.includes('messenger')) return 'messenger';
+  return 'tote';
+}
+
 function getColorHex(colorName: string): string {
   const colorMap: Record<string, string> = {
     'Black': '#000000', 'White': '#FFFFFF', 'Red': '#FF0000',
@@ -96,16 +117,8 @@ function getColorHex(colorName: string): string {
   return colorMap[colorName] || '#CCCCCC';
 }
 
-/**
- * True while Astro renders pages at build time. The Express API is not running
- * during the build, so those calls must not be attempted.
- */
-const isBuild = typeof window === 'undefined';
-
 // Fetch products from API
 export async function fetchProducts(): Promise<Product[]> {
-  if (isBuild) return staticProducts;
-
   try {
     const response = await fetch(apiUrl('/products'));
     if (!response.ok) throw new Error('Failed to fetch products');
@@ -113,14 +126,12 @@ export async function fetchProducts(): Promise<Product[]> {
     return (result.data || []).map(mapApiProduct);
   } catch (error) {
     console.error('Error fetching products:', error);
-    return staticProducts;
+    return [];
   }
 }
 
 // Fetch single product by slug
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  if (isBuild) return staticProducts.find(p => p.slug === slug) ?? null;
-
   try {
     const response = await fetch(apiUrl(`/products/slug/${encodeURIComponent(slug)}`));
     if (!response.ok) return null;
@@ -134,33 +145,12 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
 
 // Fetch products by category
 export async function fetchProductsByCategory(category: string): Promise<Product[]> {
-  if (isBuild) {
-    return staticProducts.filter(p => p.category === category);
-  }
-
-  try {
-    const response = await fetch(apiUrl(`/products?category=${encodeURIComponent(category)}`));
-    if (!response.ok) return [];
-    const result = await response.json();
-    return (result.data || []).map(mapApiProduct);
-  } catch (error) {
-    console.error('Error fetching products by category:', error);
-    return [];
-  }
+  const products = await fetchProducts();
+  return products.filter(p => p.category === category);
 }
 
 // Search products
 export async function searchProducts(query: string): Promise<Product[]> {
-  if (isBuild) {
-    const term = query.toLowerCase();
-    return staticProducts.filter(
-      p =>
-        p.name.toLowerCase().includes(term) ||
-        p.description.toLowerCase().includes(term) ||
-        p.tags?.some(t => t.toLowerCase().includes(term))
-    );
-  }
-
   try {
     const response = await fetch(apiUrl(`/search/products?q=${encodeURIComponent(query)}`));
     if (!response.ok) return [];

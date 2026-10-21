@@ -1,7 +1,10 @@
 import type { APIRoute } from 'astro';
-import { products } from '../data/products';
+import { fetchProducts } from '../utils/productApi';
 
-export const GET: APIRoute = ({ site }) => {
+export const prerender = false;
+
+export const GET: APIRoute = async ({ site }) => {
+  const products = await fetchProducts();
   const base = (site?.href ?? 'https://roquace.com').replace(/\/$/, '');
 
   const staticRoutes = [
