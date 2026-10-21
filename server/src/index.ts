@@ -28,8 +28,22 @@ const distPath = join(__dirname, '../../dist');
 // req.ip (used by the login rate limiter) the real client address.
 app.set('trust proxy', 1);
 app.use(helmet({
-  // The frontend relies on inline scripts/styles, so CSP is not enabled here.
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      // Astro emits inline JSON islands and a few inline scripts.
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'self'"],
+      upgradeInsecureRequests: null
+    }
+  },
   crossOriginEmbedderPolicy: false
 }));
 const corsOrigin = process.env.CORS_ORIGIN || '*';

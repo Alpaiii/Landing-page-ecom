@@ -3,7 +3,6 @@ import Layout from '../layouts/Layout.astro';
 import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import { products } from '../data/products';
 
 const title = 'Wishlist';
 const description = 'Your saved items';
@@ -45,10 +44,24 @@ const description = 'Your saved items';
   <Footer />
 </Layout>
 
-<script define:vars={{ products }}>
+<script>
+  import { mapApiProduct } from '../utils/productApi';
+
+  const API_URL = import.meta.env.PUBLIC_API_URL || '/api';
   const wishlistGrid = document.getElementById('wishlist-grid');
   const emptyWishlist = document.getElementById('empty-wishlist');
   const wishlistCountText = document.getElementById('wishlist-count-text');
+
+  let products: any[] = [];
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   function formatPrice(price: number): string {
     return new Intl.NumberFormat('id-ID', {
@@ -58,8 +71,13 @@ const description = 'Your saved items';
     }).format(price);
   }
 
-  function loadWishlist() {
+  async function loadWishlist() {
     try {
+      const response = await fetch(`${API_URL}/products`);
+      if (!response.ok) throw new Error('Failed to load products');
+      const result = await response.json();
+      products = (result.data || []).map(mapApiProduct);
+
       const wishlistIds = JSON.parse(localStorage.getItem('roquace-wishlist') || '[]');
       
       if (wishlistIds.length === 0) {
@@ -87,17 +105,17 @@ const description = 'Your saved items';
 
           return `
             <div class="group" data-product-id="${product.id}">
-              <a href="/products/${product.slug}" class="block relative aspect-[4/5] overflow-hidden mb-4 bg-foreground/5">
+              <a href="/products/${escapeHtml(product.slug)}" class="block relative aspect-[4/5] overflow-hidden mb-4 bg-foreground/5">
                 <img
-                  src="${product.thumbnail}"
-                  alt="${product.name}"
+                  src="${escapeHtml(product.thumbnail)}"
+                  alt="${escapeHtml(product.name)}"
                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
                 
                 ${product.badge ? `
                   <span class="absolute top-4 left-4 bg-foreground text-background text-xs px-3 py-1.5 tracking-wider uppercase font-body">
-                    ${product.badge}
+                    ${escapeHtml(product.badge)}
                     ${product.badge === 'Sale' && discount > 0 ? ` -${discount}%` : ''}
                   </span>
                 ` : ''}
@@ -116,13 +134,13 @@ const description = 'Your saved items';
               <div>
                 ${product.subcategory ? `
                   <p class="text-xs tracking-wider uppercase text-foreground/50 font-body mb-1">
-                    ${product.subcategory}
+                    ${escapeHtml(product.subcategory)}
                   </p>
                 ` : ''}
                 
                 <h3 class="font-heading text-base md:text-lg mb-2">
-                  <a href="/products/${product.slug}" class="hover:text-accent transition-colors">
-                    ${product.name}
+                  <a href="/products/${escapeHtml(product.slug)}" class="hover:text-accent transition-colors">
+                    ${escapeHtml(product.name)}
                   </a>
                 </h3>
                 
@@ -209,14 +227,26 @@ const description = 'Your saved items';
     if (!product) return;
 
     try {
-      // Add to cart (basic implementation)
+      const color = product.colors?.[0]?.name ?? '';
+      const size = product.sizes?.find((option: any) => option.available)?.name ?? product.sizes?.[0]?.name ?? '';
       const cart = JSON.parse(localStorage.getItem('roquace_cart') || '[]');
-      cart.push({
-        productId: product.id,
-        product: product,
-        quantity: 1,
-        price: product.price,
-      });
+      const existing = cart.find(
+        (item: any) => item.productId === product.id && item.color === color && item.size === size
+      );
+
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          productId: product.id,
+          product,
+          color,
+          size,
+          quantity: 1,
+          price: product.price,
+        });
+      }
+
       localStorage.setItem('roquace_cart', JSON.stringify(cart));
       
       // Remove from wishlist

@@ -1,5 +1,14 @@
 ---
-import { products } from '../data/products';
+import type { Product } from '../data/products';
+
+interface Props {
+  /** Products currently shown, used to build the available filter values. */
+  products: Product[];
+  /** Pre-checks a category filter, used by the /shop/[category] route. */
+  initialCategory?: string;
+}
+
+const { products, initialCategory } = Astro.props;
 
 // Extract unique values from products for filters
 const categories = [...new Set(products.map(p => p.category))];
@@ -17,13 +26,6 @@ const priceRanges = [
 
 // Ratings
 const ratings = [5, 4, 3, 2, 1];
-
-interface Props {
-  /** Pre-checks a category filter, used by the /shop/[category] route. */
-  initialCategory?: string;
-}
-
-const { initialCategory } = Astro.props;
 ---
 
 <aside class="filter-sidebar w-full lg:w-64 flex-shrink-0">

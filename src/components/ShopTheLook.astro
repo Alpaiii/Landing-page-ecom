@@ -1,8 +1,10 @@
 ---
-import { products } from '../data/products';
+import { fetchProducts } from '../utils/productApi';
 
 // Get featured products for the look
-const lookProducts = products.slice(0, 3);
+const products = await fetchProducts();
+const lookProducts = products.filter((product) => product.featured).slice(0, 3);
+const displayProducts = lookProducts.length > 0 ? lookProducts : products.slice(0, 3);
 ---
 
 <section class="section-padding">
@@ -50,7 +52,7 @@ const lookProducts = products.slice(0, 3);
 
       <!-- Product List -->
       <div class="flex flex-col justify-center space-y-6">
-        {lookProducts.map((product, index) => (
+        {displayProducts.map((product, index) => (
           <div class="product-item flex gap-4 p-4 border border-transparent hover:border-border transition-colors" data-index={index}>
             <a href={`/products/${product.slug}`} class="w-24 h-28 flex-shrink-0 bg-foreground/5">
               <img

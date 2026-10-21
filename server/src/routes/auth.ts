@@ -3,6 +3,7 @@ import pool from '../config/database.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { retryAfterSeconds, recordFailure, clearFailures, loginKey } from '../utils/rateLimit.js';
+import { ADMIN_COOKIE, ADMIN_COOKIE_MAX_AGE_MS, getAdminToken } from '../utils/cookies.js';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post('/login', async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     const key = loginKey(email);
-    const retryAfter = retryAfterSeconds(key, LOGIN_MAX_ATTEMPTS);
+    const retryAfter = await retryAfterSeconds(key, LOGIN_MAX_ATTEMPTS);
     if (retryAfter > 0) {
       res.setHeader('Retry-After', String(retryAfter));
       res.status(429).json({ error: 'Too many login attempts. Try again later.', retryAfter });
@@ -35,7 +36,7 @@ router.post('/login', async (req: Request, res: Response) => {
     const admin = result.rows[0];
 
     if (!admin) {
-      recordFailure(key, LOGIN_WINDOW_MS);
+      await recordFailure(key, LOGIN_WINDOW_MS);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
@@ -43,12 +44,12 @@ router.post('/login', async (req: Request, res: Response) => {
     const validPassword = await bcrypt.compare(password, admin.password_hash);
 
     if (!validPassword) {
-      recordFailure(key, LOGIN_WINDOW_MS);
+      await recordFailure(key, LOGIN_WINDOW_MS);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
 
-    clearFailures(key);
+    await clearFailures(key);
 
     const token = jwt.sign(
       { adminId: admin.id, email: admin.email },
@@ -56,9 +57,16 @@ router.post('/login', async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
+    res.cookie(ADMIN_COOKIE, token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: ADMIN_COOKIE_MAX_AGE_MS
+    });
+
     res.json({
       success: true,
-      token,
       admin: {
         id: admin.id,
         email: admin.email,
@@ -73,7 +81,7 @@ router.post('/login', async (req: Request, res: Response) => {
 // Verify token
 router.get('/verify', async (req: Request, res: Response) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = getAdminToken(req);
 
     if (!token) {
       res.status(401).json({ error: 'No token provided' });
@@ -86,6 +94,12 @@ router.get('/verify', async (req: Request, res: Response) => {
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
   }
+});
+
+// Clear the admin session cookie.
+router.post('/logout', (req: Request, res: Response) => {
+  res.clearCookie(ADMIN_COOKIE, { path: '/' });
+  res.json({ success: true });
 });
 
 export default router;

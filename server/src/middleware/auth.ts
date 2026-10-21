@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { getAdminToken } from '../utils/cookies.js';
 
 interface JWTPayload {
   adminId: string;
@@ -20,7 +21,7 @@ export const authenticateAdmin = (
   next: NextFunction
 ): void => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = getAdminToken(req);
 
     if (!token) {
       res.status(401).json({ error: 'No token provided' });

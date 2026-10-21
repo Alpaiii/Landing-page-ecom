@@ -8,7 +8,17 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM products ORDER BY created_at DESC'
+      `SELECT p.*,
+              COALESCE(r.rating, 0)::float AS rating,
+              COALESCE(r.review_count, 0)::int AS review_count
+       FROM products p
+       LEFT JOIN (
+         SELECT product_id, AVG(rating)::numeric(3,1) AS rating, COUNT(*)::int AS review_count
+         FROM reviews
+         WHERE is_approved = true
+         GROUP BY product_id
+       ) r ON r.product_id = p.id
+       ORDER BY p.created_at DESC`
     );
 
     res.json({ success: true, data: result.rows });
@@ -21,7 +31,17 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM products WHERE id = $1',
+      `SELECT p.*,
+              COALESCE(r.rating, 0)::float AS rating,
+              COALESCE(r.review_count, 0)::int AS review_count
+       FROM products p
+       LEFT JOIN (
+         SELECT product_id, AVG(rating)::numeric(3,1) AS rating, COUNT(*)::int AS review_count
+         FROM reviews
+         WHERE is_approved = true
+         GROUP BY product_id
+       ) r ON r.product_id = p.id
+       WHERE p.id = $1`,
       [req.params.id]
     );
 
@@ -40,7 +60,17 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.get('/slug/:slug', async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM products WHERE slug = $1',
+      `SELECT p.*,
+              COALESCE(r.rating, 0)::float AS rating,
+              COALESCE(r.review_count, 0)::int AS review_count
+       FROM products p
+       LEFT JOIN (
+         SELECT product_id, AVG(rating)::numeric(3,1) AS rating, COUNT(*)::int AS review_count
+         FROM reviews
+         WHERE is_approved = true
+         GROUP BY product_id
+       ) r ON r.product_id = p.id
+       WHERE p.slug = $1`,
       [req.params.slug]
     );
 

@@ -1,5 +1,5 @@
 ---
-import { products } from '../data/products';
+import { fetchProducts } from '../utils/productApi';
 
 interface Props {
   currentSlug?: string;
@@ -10,6 +10,7 @@ const MAX_ITEMS = 4;
 
 // The list is assembled server-side from the full catalogue, then the client
 // script reorders it to match the user's actual viewing history.
+const products = await fetchProducts();
 const candidates = products.filter((product) => product.slug !== EXCLUDED_SLUG);
 ---
 

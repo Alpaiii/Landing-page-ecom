@@ -96,11 +96,9 @@ const title = 'Admin Login';
         throw new Error(error.error || 'Login failed');
       }
 
-      const result = await response.json();
-      
-      // Save token to localStorage
-      localStorage.setItem('admin_token', result.token);
-      
+      // The server sets an httpOnly session cookie; nothing sensitive is kept in JS.
+      localStorage.removeItem('admin_token');
+
       // Redirect to admin dashboard
       window.location.href = '/admin';
       

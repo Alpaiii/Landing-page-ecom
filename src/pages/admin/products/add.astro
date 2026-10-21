@@ -248,15 +248,7 @@ const title = 'Add Product';
     authCheck?.classList.remove('hidden');
     
     try {
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        window.location.href = '/admin/login';
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/auth/verify`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await fetch(`${API_URL}/auth/verify`);
 
       if (!response.ok) {
         localStorage.removeItem('admin_token');
@@ -289,13 +281,11 @@ const title = 'Add Product';
     errorMessage.classList.add('hidden');
 
     try {
-      const token = localStorage.getItem('admin_token');
       const body = new FormData();
       body.append('image', file);
 
       const response = await fetch(`${API_URL}/upload`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
         body
       });
 
@@ -341,12 +331,10 @@ const title = 'Add Product';
         is_new: formData.get('is_new') === 'on',
       };
 
-      const token = localStorage.getItem('admin_token');
       const response = await fetch(`${API_URL}/products`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(productData)
       });

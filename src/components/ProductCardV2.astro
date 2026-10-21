@@ -10,6 +10,9 @@ interface Props {
 
 const { product, showQuickAdd = true, index = 0 } = Astro.props;
 
+const defaultColor = product.colors[0]?.name ?? '';
+const defaultSize = product.sizes.find((size) => size.available)?.name ?? product.sizes[0]?.name ?? '';
+
 const discount = product.compareAtPrice ? calculateDiscountPercentage(product.compareAtPrice, product.price) : 0;
 
 // Determine badge display
@@ -110,6 +113,13 @@ const isLowStock = product.inStock && product.stockCount && product.stockCount <
           <button
             class="quick-add-btn w-full bg-foreground text-background py-3 text-xs tracking-wider uppercase font-body hover:bg-foreground/90 transition-colors"
             data-product-id={product.id}
+            data-product-slug={product.slug}
+            data-product-name={product.name}
+            data-product-thumbnail={product.thumbnail}
+            data-product-price={product.price}
+            data-product-stock-count={product.stockCount ?? 0}
+            data-product-color={defaultColor}
+            data-product-size={defaultSize}
             aria-label={`Quick add ${product.name} to cart`}
           >
             Quick Add
@@ -268,29 +278,61 @@ const isLowStock = product.inStock && product.stockCount && product.stockCount <
   });
 
   // Quick Add functionality
+  const CART_KEY = 'roquace_cart';
+
   document.querySelectorAll('.quick-add-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const productId = (btn as HTMLButtonElement).dataset.productId;
-      
-      // Show loading state
-      btn.textContent = 'Adding...';
+
+      const dataset = (btn as HTMLButtonElement).dataset;
+      const productId = dataset.productId ?? '';
+      if (!productId) return;
+
+      let cart: any[] = [];
+      try {
+        cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      } catch {
+        cart = [];
+      }
+
+      const color = dataset.productColor ?? '';
+      const size = dataset.productSize ?? '';
+      const existing = cart.find(
+        (item) => item.productId === productId && item.color === color && item.size === size
+      );
+
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          productId,
+          product: {
+            id: productId,
+            slug: dataset.productSlug ?? '',
+            name: dataset.productName ?? '',
+            thumbnail: dataset.productThumbnail ?? '',
+            price: Number(dataset.productPrice || 0),
+            inStock: true,
+            stockCount: Number(dataset.productStockCount || 0),
+          },
+          color,
+          size,
+          quantity: 1,
+          price: Number(dataset.productPrice || 0),
+        });
+      }
+
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+      (window as unknown as { openCartDrawer?: () => void }).openCartDrawer?.();
+
+      btn.textContent = 'Added!';
       btn.setAttribute('disabled', 'true');
-      
-      // Simulate add to cart (will be replaced with actual cart logic)
       setTimeout(() => {
-        btn.textContent = 'Added!';
-        setTimeout(() => {
-          btn.textContent = 'Quick Add';
-          btn.removeAttribute('disabled');
-        }, 1000);
-        
-        // Dispatch event
-        window.dispatchEvent(new CustomEvent('cart-updated', { 
-          detail: { productId, action: 'add' }
-        }));
-      }, 500);
+        btn.textContent = 'Quick Add';
+        btn.removeAttribute('disabled');
+      }, 1000);
     });
   });
 

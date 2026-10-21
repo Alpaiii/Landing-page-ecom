@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import pool from '../config/database.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -390,6 +391,26 @@ router.put('/password', authenticateCustomer, async (req: any, res: Response) =>
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// GET all customers with order totals (admin)
+router.get('/admin/all', authenticateAdmin, async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT c.id, c.email, c.name, c.phone, c.created_at,
+              COUNT(o.id)::int AS order_count,
+              COALESCE(SUM(o.total_amount), 0) AS total_spent
+       FROM customers c
+       LEFT JOIN orders o ON o.customer_id = c.id
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`
+    );
+
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Get customers error:', error);
+    res.status(500).json({ error: 'Failed to fetch customers' });
   }
 });
 

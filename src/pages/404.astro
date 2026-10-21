@@ -4,13 +4,17 @@ import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Navbar from '../components/Navbar.astro';
 import ProductCardV2 from '../components/ProductCardV2.astro';
 import Footer from '../components/Footer.astro';
-import { getBestSellers } from '../data/products';
+import { fetchProducts } from '../utils/productApi';
 
 const title = 'Page Not Found';
 const description = 'The page you are looking for does not exist.';
 
 // Keep the visitor moving: offer a way back into the catalogue.
-const suggestions = getBestSellers(4);
+const allProducts = await fetchProducts();
+const suggestions = (allProducts.filter((product) => product.featured).length > 0
+  ? allProducts.filter((product) => product.featured)
+  : allProducts
+).slice(0, 4);
 ---
 
 <Layout title={title} description={description}>

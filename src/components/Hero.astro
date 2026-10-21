@@ -2,11 +2,13 @@
 import { siteConfig } from '../config/site';
 import { testimonials } from '../data/testimonials';
 import { categories } from '../data/categories';
-import { products } from '../data/products';
+import { fetchProducts } from '../utils/productApi';
 import { formatPrice } from '../utils/currency';
 
 const reviewCount = testimonials.length;
-const featuredProduct = products.find((p) => p.id === siteConfig.hero.shopTheLookProductId) ?? products[0];
+const allProducts = await fetchProducts();
+const featuredProduct =
+  allProducts.find((p) => p.id === siteConfig.hero.shopTheLookProductId) ?? allProducts[0];
 ---
 
 <section class="relative flex flex-col lg:flex-row bg-background overflow-hidden">
@@ -25,6 +27,7 @@ const featuredProduct = products.find((p) => p.id === siteConfig.hero.shopTheLoo
     <div class="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent lg:hidden"></div>
 
     <!-- Shop the look -->
+    {featuredProduct && (
     <div class="absolute bottom-6 left-6 right-6 lg:bottom-10 lg:left-8 lg:right-auto lg:w-[280px] hidden lg:block">
       <div class="bg-background/95 backdrop-blur-sm border border-foreground/10 p-4 flex items-center gap-4">
         <a href={`/products/${featuredProduct.slug}`} class="shrink-0 w-16 h-20 overflow-hidden bg-background">
@@ -61,6 +64,7 @@ const featuredProduct = products.find((p) => p.id === siteConfig.hero.shopTheLoo
         </button>
       </div>
     </div>
+    )}
   </div>
 
   <!-- Content -->

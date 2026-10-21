@@ -224,6 +224,13 @@ async function migrate() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         UNIQUE(customer_id, product_id)
       );
+
+      -- Login rate limiting (shared across replicas)
+      CREATE TABLE IF NOT EXISTS login_attempts (
+        key TEXT PRIMARY KEY,
+        count INTEGER NOT NULL DEFAULT 0,
+        reset_at TIMESTAMP WITH TIME ZONE NOT NULL
+      );
     `);
     console.log('✅ All tables created');
     
@@ -248,6 +255,7 @@ async function migrate() {
       CREATE INDEX IF NOT EXISTS idx_reviews_customer ON reviews(customer_id);
       CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
       CREATE INDEX IF NOT EXISTS idx_wishlist_customer ON wishlist(customer_id);
+      CREATE INDEX IF NOT EXISTS idx_login_attempts_reset ON login_attempts(reset_at);
     `);
     console.log('✅ All indexes created');
     
