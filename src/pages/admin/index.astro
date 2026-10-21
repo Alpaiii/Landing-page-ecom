@@ -54,6 +54,18 @@ const title = 'Admin Dashboard';
             >
               Collections
             </button>
+            <button
+              data-tab="orders"
+              class="tab-btn px-4 py-4 font-body text-sm uppercase tracking-wider border-b-2 border-transparent hover:border-foreground/20"
+            >
+              Orders
+            </button>
+            <button
+              data-tab="reviews"
+              class="tab-btn px-4 py-4 font-body text-sm uppercase tracking-wider border-b-2 border-transparent hover:border-foreground/20"
+            >
+              Reviews
+            </button>
           </div>
         </div>
       </nav>
@@ -112,6 +124,51 @@ const title = 'Admin Dashboard';
             <!-- Populated by JS -->
           </div>
         </div>
+
+        <!-- Orders Tab -->
+        <div id="tab-orders" class="tab-content hidden">
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-heading">Orders</h2>
+          </div>
+
+          <div id="orders-loading" class="text-center py-12">
+            <p class="font-body text-foreground/60">Loading orders...</p>
+          </div>
+
+          <div id="orders-list" class="hidden">
+            <div class="bg-background border border-border overflow-x-auto">
+              <table class="w-full">
+                <thead class="border-b border-border">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-sm font-body uppercase tracking-wider">Order</th>
+                    <th class="px-4 py-3 text-left text-sm font-body uppercase tracking-wider">Customer</th>
+                    <th class="px-4 py-3 text-left text-sm font-body uppercase tracking-wider">Total</th>
+                    <th class="px-4 py-3 text-left text-sm font-body uppercase tracking-wider">Date</th>
+                    <th class="px-4 py-3 text-left text-sm font-body uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-tbody" class="divide-y divide-border">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews Tab -->
+        <div id="tab-reviews" class="tab-content hidden">
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-heading">Reviews</h2>
+          </div>
+
+          <div id="reviews-loading" class="text-center py-12">
+            <p class="font-body text-foreground/60">Loading reviews...</p>
+          </div>
+
+          <div id="reviews-list" class="hidden grid gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -133,6 +190,13 @@ const title = 'Admin Dashboard';
   function formatPrice(value: unknown): string {
     const n = Number(value);
     return Number.isFinite(n) ? n.toLocaleString('id-ID') : '0';
+  }
+
+  function formatDate(value: unknown): string {
+    const d = new Date(String(value));
+    return Number.isNaN(d.getTime())
+      ? ''
+      : d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   const authCheck = document.getElementById('auth-check');
@@ -174,6 +238,8 @@ const title = 'Admin Dashboard';
       // Load data
       loadProducts();
       loadCollections();
+      loadOrders();
+      loadReviews();
       
     } catch (error) {
       console.error('Auth error:', error);
@@ -294,6 +360,169 @@ const title = 'Admin Dashboard';
       if (loading) loading.innerHTML = '<p class="text-red-600">Error loading collections</p>';
     }
   }
+
+  // Load orders
+  async function loadOrders() {
+    const loading = document.getElementById('orders-loading');
+    const list = document.getElementById('orders-list');
+    const tbody = document.getElementById('orders-tbody');
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`${API_URL}/orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      const result = await response.json();
+      const orders = result.data || [];
+
+      loading?.classList.add('hidden');
+      list?.classList.remove('hidden');
+
+      if (tbody) {
+        if (orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center font-body text-foreground/60">No orders yet.</td></tr>';
+        } else {
+          const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+          tbody.innerHTML = orders.map((order: any) => `
+            <tr>
+              <td class="px-4 py-3 font-body text-xs">${escapeHtml(String(order.id).slice(0, 8))}…</td>
+              <td class="px-4 py-3 font-body">
+                <div>${escapeHtml(order.customer_name)}</div>
+                <div class="text-xs text-foreground/60">${escapeHtml(order.customer_email)}</div>
+              </td>
+              <td class="px-4 py-3 font-body">Rp${formatPrice(order.total_amount)}</td>
+              <td class="px-4 py-3 font-body text-sm">${escapeHtml(formatDate(order.created_at))}</td>
+              <td class="px-4 py-3">
+                <select data-order-id="${escapeHtml(order.id)}" class="order-status px-2 py-1 border border-border font-body text-sm">
+                  ${statuses.map((s) => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      if (loading) loading.innerHTML = '<p class="text-red-600">Error loading orders</p>';
+    }
+  }
+
+  async function updateOrderStatus(id: string, status: string) {
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`${API_URL}/orders/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (!response.ok) throw new Error('Failed to update order');
+    } catch (error) {
+      console.error('Error updating order:', error);
+      alert('Failed to update order status');
+      loadOrders();
+    }
+  }
+
+  // Load reviews
+  async function loadReviews() {
+    const loading = document.getElementById('reviews-loading');
+    const list = document.getElementById('reviews-list');
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`${API_URL}/reviews/admin/all`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      const result = await response.json();
+      const reviews = result.data || [];
+
+      loading?.classList.add('hidden');
+      list?.classList.remove('hidden');
+
+      if (list) {
+        if (reviews.length === 0) {
+          list.innerHTML = '<p class="font-body text-foreground/60">No reviews yet.</p>';
+        } else {
+          list.innerHTML = reviews.map((review: any) => {
+            const rating = Number(review.rating) || 0;
+            return `
+              <div class="border border-border p-6">
+                <div class="flex items-start justify-between gap-4 mb-2">
+                  <div>
+                    <div class="font-body font-medium">${escapeHtml(review.customer_name)}</div>
+                    <div class="text-sm text-accent">${'★'.repeat(rating)}${'☆'.repeat(Math.max(0, 5 - rating))}</div>
+                  </div>
+                  <span class="text-xs px-2 py-1 ${review.is_approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                    ${review.is_approved ? 'Approved' : 'Pending'}
+                  </span>
+                </div>
+                ${review.title ? `<div class="font-body font-medium mt-2">${escapeHtml(review.title)}</div>` : ''}
+                <p class="font-body text-sm text-foreground/80 mt-1">${escapeHtml(review.comment || '')}</p>
+                <div class="flex gap-4 mt-4">
+                  ${review.is_approved
+                    ? `<button data-review-action="reject" data-review-id="${escapeHtml(review.id)}" class="text-sm text-yellow-700 hover:underline">Unapprove</button>`
+                    : `<button data-review-action="approve" data-review-id="${escapeHtml(review.id)}" class="text-sm text-green-700 hover:underline">Approve</button>`}
+                  <button data-review-action="delete" data-review-id="${escapeHtml(review.id)}" class="text-sm text-red-600 hover:underline">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+      if (loading) loading.innerHTML = '<p class="text-red-600">Error loading reviews</p>';
+    }
+  }
+
+  // Order status change
+  document.getElementById('orders-tbody')?.addEventListener('change', (event) => {
+    const select = event.target as HTMLSelectElement;
+    if (!select.classList.contains('order-status')) return;
+    const id = select.dataset.orderId;
+    if (id) updateOrderStatus(id, select.value);
+  });
+
+  // Review actions
+  document.getElementById('reviews-list')?.addEventListener('click', async (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-review-action]');
+    if (!button) return;
+
+    const id = button.dataset.reviewId;
+    const action = button.dataset.reviewAction;
+    if (!id || !action) return;
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = action === 'delete'
+        ? await fetch(`${API_URL}/reviews/admin/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        : await fetch(`${API_URL}/reviews/${encodeURIComponent(id)}/approve`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ is_approved: action === 'approve' })
+          });
+
+      if (!response.ok) throw new Error('Failed to update review');
+      loadReviews();
+    } catch (error) {
+      console.error('Error updating review:', error);
+      alert('Failed to update review');
+    }
+  });
 
   // Delete product
   async function deleteProduct(id: string) {
