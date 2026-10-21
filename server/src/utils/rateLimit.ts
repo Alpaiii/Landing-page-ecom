@@ -54,6 +54,6 @@ export function clearFailures(key: string): void {
   store.delete(key);
 }
 
-export function loginKey(ip: string | undefined, email: unknown): string {
-  return `${ip || 'unknown'}|${String(email || '').toLowerCase()}`;
+export function loginKey(email: unknown): string {
+  return String(email || '').toLowerCase();
 }

@@ -14,7 +14,7 @@ router.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const key = loginKey(req.ip, email);
+    const key = loginKey(email);
     const retryAfter = retryAfterSeconds(key, LOGIN_MAX_ATTEMPTS);
     if (retryAfter > 0) {
       res.setHeader('Retry-After', String(retryAfter));
