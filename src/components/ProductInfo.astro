@@ -188,6 +188,7 @@ const whatsappNumber = siteConfig.contact.whatsapp;
       id="whatsapp-btn"
       data-product-name={product.name}
       data-product-price={product.price}
+      data-whatsapp-number={whatsappNumber}
       href={generateWhatsAppUrl(
         generateProductInquiryMessage({ name: product.name, price: product.price }),
         whatsappNumber
@@ -245,8 +246,9 @@ const whatsappNumber = siteConfig.contact.whatsapp;
   </div>
 </div>
 
-<script define:vars={{ whatsappNumber }}>
+<script>
   // Quantity controls
+  const whatsappNumber = document.getElementById('whatsapp-btn')?.getAttribute('data-whatsapp-number') ?? '';
   const qtyInput = document.getElementById('quantity') as HTMLInputElement;
   const qtyDecrease = document.getElementById('qty-decrease');
   const qtyIncrease = document.getElementById('qty-increase');

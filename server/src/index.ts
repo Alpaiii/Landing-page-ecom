@@ -40,6 +40,19 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Astro is configured with trailingSlash: 'never', but the Node middleware
+// adapter still 404s URLs that arrive with a trailing slash (e.g. /shop/).
+// Normalise them here so shared or hand-typed links keep working.
+app.use((req: Request, res: Response, next: any) => {
+  if (req.path.length > 1 && req.path.endsWith('/')) {
+    const queryIndex = req.url.indexOf('?');
+    const query = queryIndex >= 0 ? req.url.slice(queryIndex) : '';
+    res.redirect(301, `${req.path.replace(/\/+$/, '')}${query}`);
+    return;
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/products', productsRouter);
 app.use('/api/auth', authRouter);
